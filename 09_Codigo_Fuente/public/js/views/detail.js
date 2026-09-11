@@ -30,7 +30,7 @@ export async function render(root, params){
       `<div class="stat"><div class="label">Repositorio</div><div class="value" style="font-size:18px">${esc(d.repoName || d.repoId)}</div></div>` +
       `<div class="stat orange"><div class="label">Procesado con IA</div><div class="value" style="font-size:17px">${d.analysisAt ? fmtDate(d.analysisAt) : 'Pendiente'}</div></div>`;
 
-    root.querySelector('#sum').innerHTML = d.summary && d.summary.length
+    root.querySelector('#sum').innerHTML = Array.isArray(d.summary) && d.summary.length
       ? d.summary.map(s => `<p style="margin:5px 0;line-height:1.5">• ${esc(s)}</p>`).join('')
       : '<div class="empty">Aún sin resumen. Procesa el documento con IA.</div>';
 
@@ -48,7 +48,7 @@ export async function render(root, params){
     const rows = Object.entries(ents).filter(([, v]) => v && v.length);
     root.querySelector('#ents').innerHTML = rows.length
       ? `<table class="tbl entities"><tr><th>Entidad</th><th>Valores detectados</th></tr>` +
-        rows.map(([k, v]) => `<tr><td><b>${esc(ENT_LABELS[k] || k)}</b></td><td>${v.map(x => esc(x)).join(' · ')}</td></tr>`).join('') + `</table>`
+        rows.map(([k, v]) => `<tr><td><b>${esc(ENT_LABELS[k] || k)}</b></td><td>${Array.isArray(v) ? v.map(x => esc(x)).join(' · ') : esc(String(v))}</td></tr>`).join('') + `</table>`
       : '<div class="empty">Procesa el documento para extraer entidades (fechas, valores, NIT, cuentas, teléfonos, correos, identificadores).</div>';
 
     /* Limpia antes de reconstruir para no duplicar botones en reproceso */

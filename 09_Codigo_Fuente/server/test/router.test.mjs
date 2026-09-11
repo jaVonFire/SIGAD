@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ROUTES, parseHash, resolveRoute } from '../../public/js/router.js';
+import { parseJson } from '../src/db.js';
 
 test('parseHash: #/docs/<id> extrae path e id', () => {
   assert.deepEqual(parseHash('#/docs/abc-123'), { path: 'docs', id: 'abc-123' });
@@ -56,4 +57,17 @@ test('resolveRoute: #/docs/<id> con id numérico conserva el id', () => {
 test('ROUTES: docs está registrado y detail no requiere ruta propia', () => {
   assert.ok(ROUTES.some(r => r.path === 'docs'));
   assert.ok(!ROUTES.some(r => r.path === 'detail'));
+});
+
+test('parseJson: desanida JSON doble-codificado (datos legados del seed)', () => {
+  const ent = { fechas: ['15 de abril de 2024'], montos: ['COP $4,750,000'] };
+  const anidado = JSON.stringify(JSON.stringify(JSON.stringify(ent)));
+  const out = parseJson(anidado, {});
+  assert.deepEqual(out, ent);
+});
+
+test('parseJson: JSON normal pasa igual y falla a fallback', () => {
+  assert.deepEqual(parseJson(JSON.stringify(['a', 'b'])), ['a', 'b']);
+  assert.equal(parseJson(undefined, 'FB'), 'FB');
+  assert.equal(parseJson('no-json', null), null);
 });

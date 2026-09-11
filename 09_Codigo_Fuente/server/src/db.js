@@ -104,5 +104,10 @@ export const now = () => Date.now();
 export const uid = () => crypto.randomUUID();
 export const parseJson = (s, fallback = null) => {
   if (!s) return fallback;
-  try { return JSON.parse(s); } catch { return fallback; }
+  let cur = s, parsed = false;
+  /* Desanida datos legados que quedaron doble/omnicodificados (JSON dentro de JSON). */
+  for (let i = 0; i < 8 && typeof cur === 'string'; i++){
+    try { cur = JSON.parse(cur); parsed = true; } catch { break; }
+  }
+  return parsed ? cur : fallback;
 };
