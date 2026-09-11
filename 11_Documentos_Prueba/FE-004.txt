@@ -1,0 +1,14 @@
+FACTURA ELECTRONICA DE VENTA No. FE-004
+Distribuidora El Puerto S.A.S. - NIT 900.318.254-3
+Telefono: (607) 697-2415 - Correo: cartera@elpuerto.co
+Cliente: Clinica Vida Plena - NIT 900.661.123-9
+Fecha de expedicion: 8 de enero de 2024
+Fecha de vencimiento: 22 de febrero de 2024
+Concepto: servicios de aseo y cafeteria corporativa - Cantidad: 4 unidades
+Valor unitario: $871,000 - Subtotal: $3,484,000
+IVA (19%): $661,960
+TOTAL A PAGAR: COP $4,145,960
+Forma de pago: cheque
+Resolucion de facturacion DIAN No. 1876400000003
+
+La presente factura constituye titulo valor conforme al articulo 774 del Codigo de Comercio.

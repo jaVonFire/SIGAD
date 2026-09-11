@@ -1,0 +1,35 @@
+{
+  "name": "sigad",
+  "version": "1.0.0",
+  "description": "SIGAD — Sistema Inteligente de Gestión y Análisis Documental. Proyecto integrador UTS, VI semestre, Desarrollo de Aplicaciones Empresariales.",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "seed": "node server/seed.js",
+    "corpus": "node server/seed.js --corpus-only",
+    "test": "node --test \"server/test/*.test.mjs\""
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "keywords": [
+    "sigad",
+    "gestion-documental",
+    "inteligencia-artificial",
+    "rag",
+    "nlp",
+    "uts"
+  ],
+  "author": "Equipo SIGAD — UTS VI semestre",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "mammoth": "^1.8.0",
+    "multer": "^1.4.5-lts.1",
+    "pdfjs-dist": "^4.10.38"
+  }
+}

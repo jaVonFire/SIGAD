@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIGAD · Sistema Inteligente de Gestión y Análisis Documental</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F0E5; --paper2:#ECE7D8; --card:#FBF8F0; --ink:#1B1813; --ink2:#5A5343;
+  --line:#DAD3C0; --line2:#C7BFAA; --accent:#B5401F; --accent2:#8F2F13;
+  --green:#3E6B4F; --amber:#9A6B1F; --red:#A02D14;
+  --c-factura:#3E6B4F; --c-contrato:#8C5A2B; --c-correspondencia:#B5401F; --c-informe:#46628C;
+  --mono:'IBM Plex Mono',ui-monospace,monospace; --sans:'Space Grotesk',sans-serif; --serif:'Fraunces',serif;
+  --sh:3px 3px 0 rgba(27,24,19,.13);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit;color:var(--ink)}
+::selection{background:var(--accent);color:var(--paper)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--paper)}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:5px;border:2px solid var(--paper)}
+.mono{font-family:var(--mono)}
+.hidden{display:none!important}
+body[data-screen="login"] #app{display:none!important}
+body[data-screen="app"] #login{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ============ BOTONES ============ */
+.btn{display:inline-flex;align-items:center;gap:8px;font:600 13px var(--sans);background:var(--ink);color:var(--paper);
+  padding:11px 18px;border:1px solid var(--ink);box-shadow:var(--sh);transition:all .15s ease}
+.btn svg{width:15px;height:15px}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--accent)}
+.btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(27,24,19,.2)}
+.btn:disabled{opacity:.5;pointer-events:none}
+.btn.small{padding:8px 13px;font-size:12px}
+.btn.wide{width:100%;justify-content:center;padding:13px}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--ink);box-shadow:none}
+.btn-ghost:hover{box-shadow:var(--sh);border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--red);border-color:var(--red)}
+.linklike{font:500 12.5px var(--sans);color:var(--accent);text-decoration:underline;text-underline-offset:3px;margin-top:14px}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--line);background:var(--card);transition:all .12s;flex-shrink:0}
+.iconbtn svg{width:14px;height:14px}
+.iconbtn:hover{border-color:var(--ink)}
+.iconbtn.del:hover{border-color:var(--red);color:var(--red)}
+
+/* ============ LOGIN ============ */
+.login{min-height:100vh;display:grid;grid-template-columns:1.25fr 1fr}
+.login-brand{background:var(--ink);color:var(--paper);padding:60px 64px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.brand-top{font:600 10.5px var(--mono);letter-spacing:.22em;color:rgba(244,240,229,.65);border-bottom:1px solid rgba(244,240,229,.18);padding-bottom:16px}
+.brand-title{font:600 clamp(42px,4.8vw,68px)/1.03 var(--serif);margin:48px 0 20px;letter-spacing:-.015em}
+.brand-title em{font-style:italic;color:#D96A3F}
+.brand-sub{max-width:50ch;font-size:15.5px;color:rgba(244,240,229,.8);line-height:1.65}
+.brand-index{list-style:none;margin:auto 0 36px;max-width:440px}
+.brand-index li{display:flex;gap:16px;padding:13px 4px;border-bottom:1px solid rgba(244,240,229,.14);font:500 13.5px var(--sans);color:rgba(244,240,229,.88);align-items:baseline}
+.brand-index li span{font:600 11px var(--mono);color:#D96A3F}
+.stamp{position:absolute;right:56px;top:92px;width:132px;height:132px;color:#D96A3F;transform:rotate(-11deg);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.login-brand:hover .stamp{transform:rotate(4deg) scale(1.04)}
+.brand-foot{font:500 10px var(--mono);letter-spacing:.14em;color:rgba(244,240,229,.45)}
+.login-form-wrap{display:flex;align-items:center;justify-content:center;padding:44px 40px;background:var(--paper)}
+.login-card{width:100%;max-width:390px;animation:fadeUp .5s ease both}
+.login-card h2{font:600 34px var(--serif)}
+.auth-sub{color:var(--ink2);margin:6px 0 28px;font-size:14px}
+.field{margin-bottom:20px}
+.field label{display:block;font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);margin-bottom:7px}
+.field .inwrap{display:flex;align-items:center;border-bottom:1.5px solid var(--line2);transition:border-color .15s}
+.field .inwrap:focus-within{border-bottom-color:var(--accent)}
+.field input{flex:1;border:none;background:transparent;padding:9px 2px;font-size:15px}
+.field input:focus{outline:none}
+.field .peek{color:var(--ink2);padding:4px}
+.auth-error{margin:14px 0 0;font:500 12px var(--mono);color:var(--red);min-height:18px}
+.quick{margin-top:24px;border:1px dashed var(--line2);padding:14px}
+.quick .qt{font:600 10px var(--mono);letter-spacing:.16em;color:var(--ink2);margin-bottom:10px}
+.quick .row{display:flex;gap:8px}
+.quick button{flex:1;font:600 12px var(--sans);border:1px solid var(--ink);padding:9px 6px;transition:all .12s}
+.quick button:hover{background:var(--ink);color:var(--paper)}
+
+/* ============ SHELL ============ */
+.app{display:grid;grid-template-columns:240px 1fr;height:100vh;overflow:hidden}
+.side{background:var(--ink);color:var(--paper);display:flex;flex-direction:column;padding:26px 0 20px}
+.side-brand{padding:0 24px 20px;border-bottom:1px solid rgba(244,240,229,.16)}
+.side-logo{font:700 24px var(--serif)}
+.side-logo b{color:#D96A3F}
+.side-cap{font:600 8.5px var(--mono);letter-spacing:.24em;color:rgba(244,240,229,.5);margin-top:5px}
+.side-nav{display:flex;flex-direction:column;margin-top:12px;flex:1}
+.side-nav button{display:flex;align-items:center;gap:12px;padding:12px 24px;color:rgba(244,240,229,.6);font:500 13.5px var(--sans);text-align:left;border-left:3px solid transparent;transition:all .13s;width:100%}
+.side-nav button svg{width:16px;height:16px;flex-shrink:0}
+.side-nav button .n{font:600 10px var(--mono);opacity:.5;width:16px}
+.side-nav button:hover{color:var(--paper);background:rgba(244,240,229,.06)}
+.side-nav button.on{color:var(--paper);border-left-color:var(--accent);background:rgba(244,240,229,.09);font-weight:600}
+.side-badge{margin-left:auto;font:600 10px var(--mono);background:var(--accent);color:var(--paper);padding:1px 7px;border-radius:2px}
+.side-engine{margin:12px 24px 0;padding:10px 12px;border:1px solid rgba(244,240,229,.2);font:500 10px var(--mono);color:rgba(244,240,229,.7);display:flex;align-items:center;gap:8px;line-height:1.5}
+.side-engine .dot{width:7px;height:7px;border-radius:50%;background:#7FBF8E;flex-shrink:0;box-shadow:0 0 0 3px rgba(127,191,142,.18)}
+.side-user{margin-top:14px;padding:15px 24px 0;border-top:1px solid rgba(244,240,229,.16);display:flex;align-items:center;gap:11px}
+.avatar{width:37px;height:37px;border-radius:50%;background:var(--accent);color:var(--paper);display:flex;align-items:center;justify-content:center;font:600 12px var(--mono);flex-shrink:0}
+.side-user .un{font:600 13px var(--sans);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.side-user .ur{font:500 9.5px var(--mono);letter-spacing:.12em;color:rgba(244,240,229,.5);text-transform:uppercase}
+.side-user .iconbtn{margin-left:auto;border-color:rgba(244,240,229,.3);background:transparent;color:rgba(244,240,229,.75)}
+.side-user .iconbtn:hover{border-color:var(--accent);color:var(--paper)}
+.main-col{display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 40px;border-bottom:1px solid var(--line);flex-shrink:0;gap:14px}
+.crumb{font:600 11px var(--mono);letter-spacing:.18em;color:var(--ink2);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-actions{display:flex;gap:10px;flex-shrink:0}
+.view{flex:1;overflow-y:auto;padding:34px 42px 70px}
+.view-inner{max-width:1180px;margin:0 auto;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}}
+
+/* ============ SECCIONES ============ */
+.sec-head{margin-bottom:26px}
+.sec-head .num{font:600 11px var(--mono);letter-spacing:.2em;color:var(--accent)}
+.sec-head h2{font:600 34px var(--serif);margin:4px 0 6px;letter-spacing:-.01em}
+.sec-head p{color:var(--ink2);font-size:14px;max-width:74ch}
+.sec-head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+/* ============ KPIs ============ */
+.kpis{display:flex;border-top:1.5px solid var(--ink);border-bottom:1px solid var(--line2);margin-bottom:32px;flex-wrap:wrap}
+.kpi{flex:1;min-width:150px;padding:20px 22px 17px;border-right:1px solid var(--line2)}
+.kpi:first-child{padding-left:2px}
+.kpi:last-child{border-right:none}
+.kpi .v{font:600 44px/1 var(--serif);letter-spacing:-.02em}
+.kpi .v small{font:500 15px var(--serif)}
+.kpi .l{font:600 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);margin-top:8px}
+.kpi.warn .v{color:var(--red)}
+
+/* ============ PANELES / GRÁFICOS ============ */
+.panel{background:var(--card);border:1px solid var(--line)}
+.panel-h{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid var(--line);gap:10px}
+.panel-h h3{font:600 10.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink2)}
+.panel-b{padding:20px}
+.dash-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:26px}
+.donut-wrap{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.donut{width:168px;height:168px;flex-shrink:0}
+.donut .dn{font:600 34px var(--serif);fill:var(--ink)}
+.donut .dc{font:600 8.5px var(--mono);letter-spacing:.15em;fill:var(--ink2)}
+.legend{flex:1;min-width:190px}
+.lg-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.lg-row:last-child{border:none}
+.lg-dot{width:11px;height:11px;border-radius:2px;flex-shrink:0}
+.lg-val{margin-left:auto;font:600 11.5px var(--mono);color:var(--ink2)}
+.fmt-row{display:grid;grid-template-columns:48px 1fr 56px;align-items:center;gap:14px;padding:9px 0}
+.fmt-row .ext{font:600 10px var(--mono);border:1px solid var(--ink2);color:var(--ink2);text-align:center;padding:2px 0}
+.fmt-track{height:8px;background:var(--paper2)}
+.fmt-fill{height:100%;background:var(--ink);transition:width .6s ease}
+.fmt-val{font:500 12px var(--mono);text-align:right;color:var(--ink2)}
+.spark{display:flex;align-items:flex-end;gap:5px;height:58px;padding:6px 0 2px}
+.spark .bar{flex:1;background:var(--ink);opacity:.82;min-height:2px;transition:height .4s}
+.spark .bar.today{background:var(--accent);opacity:1}
+.tl{list-style:none}
+.tl li{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:12.5px;align-items:flex-start}
+.tl li:last-child{border:none}
+.tl .td{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.tl-INFO{background:var(--green)}.tl-WARN{background:var(--amber)}.tl-ERROR{background:var(--red)}
+.tl .tc{font:600 9.5px var(--mono);letter-spacing:.08em;color:var(--ink2);text-transform:uppercase}
+.tl .tt{margin-left:auto;font:500 10px var(--mono);color:var(--ink2);white-space:nowrap}
+
+/* ============ TABLAS ============ */
+table.dt{width:100%;border-collapse:collapse}
+table.dt th{font:600 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);text-align:left;padding:10px 12px;border-bottom:1.5px solid var(--ink);white-space:nowrap}
+table.dt td{padding:13px 12px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13.5px}
+tr.doc-row{cursor:pointer;transition:background .1s}
+tr.doc-row:hover{background:#F6F2E6}
+tr.snippet-row td{background:#F3EFE1;padding:10px 12px 14px 46px;font-size:12.5px;color:var(--ink2);border-left:2px solid var(--accent)}
+.doc-name{display:flex;align-items:center;gap:10px;font-weight:600;word-break:break-all}
+.doc-name svg{width:15px;height:15px;color:var(--ink2);flex-shrink:0}
+.doc-meta{font:500 10.5px var(--mono);color:var(--ink2);margin-top:2px}
+.seal-cat{display:inline-block;font:600 9.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;border:1.5px solid currentColor;padding:2px 8px;white-space:nowrap}
+.chip-estado{display:inline-block;font:600 10px var(--mono);letter-spacing:.08em;padding:3px 9px;border:1px solid var(--line2);border-radius:10px;white-space:nowrap}
+.st-procesado{color:var(--green);border-color:var(--green);background:rgba(62,107,79,.07)}
+.st-procesando{color:var(--amber);border-color:var(--amber)}
+.st-error{color:var(--red);border-color:var(--red);background:rgba(160,45,20,.07)}
+.st-pendiente{color:var(--ink2)}
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+.lv{display:inline-block;font:600 9.5px var(--mono);padding:2px 8px;border-radius:9px;border:1px solid;white-space:nowrap}
+.lv-INFO{color:var(--green);border-color:var(--green)}
+.lv-WARN{color:var(--amber);border-color:var(--amber)}
+.lv-ERROR{color:var(--red);border-color:var(--red)}
+
+/* ============ FILTROS ============ */
+.filters{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.search-box{flex:1;min-width:230px;display:flex;align-items:center;gap:10px;border:1px solid var(--line2);background:var(--card);padding:9px 14px}
+.search-box svg{width:15px;height:15px;color:var(--ink2);flex-shrink:0}
+.search-box input{border:none;background:transparent;flex:1;font-size:13.5px;min-width:0}
+.search-box input:focus{outline:none}
+.filters select{border:1px solid var(--line2);background:var(--card);padding:8px 10px;font:500 12.5px var(--sans);color:var(--ink)}
+
+/* ============ VACÍO ============ */
+.empty{border:1.5px dashed var(--line2);padding:54px 30px;text-align:center;background:var(--card)}
+.empty h3{font:600 26px var(--serif);margin-bottom:8px}
+.empty p{color:var(--ink2);font-size:13.5px;max-width:54ch;margin:0 auto 22px}
+.empty .acts{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.empty-mini{font:500 12px var(--mono);color:var(--ink2);padding:14px 0}
+
+/* ============ DETALLE ============ */
+.back-link{display:inline-flex;align-items:center;gap:7px;font:600 11.5px var(--mono);letter-spacing:.1em;color:var(--ink2);margin-bottom:18px;text-transform:uppercase}
+.back-link:hover{color:var(--accent)}
+.back-link svg{width:14px;height:14px}
+.detail-head{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:26px}
+.detail-head h2{font:600 30px var(--serif);margin:8px 0 10px;word-break:break-word}
+.detail-meta{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.detail-meta .m{font:500 10.5px var(--mono);color:var(--ink2)}
+.detail-acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.detail-grid{display:grid;grid-template-columns:400px 1fr;gap:28px;align-items:start}
+.d-sec{margin-bottom:22px}
+.probs .pb-row{padding:11px 20px;border-bottom:1px solid var(--line)}
+.probs .pb-top{display:flex;justify-content:space-between;font:600 12.5px var(--sans);margin-bottom:6px}
+.probs .pb-top .pct{font:600 11px var(--mono);color:var(--ink2)}
+.probs .pb-track{height:7px;background:var(--paper2)}
+.probs .pb-fill{height:100%;transition:width .6s}
+.sum-list{list-style:none;counter-reset:s;position:relative;padding-left:22px}
+.sum-list li{counter-increment:s;position:relative;padding:9px 4px 9px 12px;font-size:13.5px;line-height:1.6;border-bottom:1px solid var(--line)}
+.sum-list li::before{content:counter(s);position:absolute;left:-22px;top:11px;font:600 10px var(--mono);color:var(--accent);width:16px;text-align:center}
+.ent-group{padding:13px 20px;border-bottom:1px solid var(--line)}
+.ent-group:last-child{border:none}
+.eg-t{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-bottom:9px}
+.ent-chips{display:flex;flex-wrap:wrap;gap:7px}
+.ent{font:500 12px var(--mono);background:var(--paper);border:1px solid var(--line2);padding:3px 9px}
+.doc-text{white-space:pre-wrap;font-size:14px;line-height:1.75;max-width:72ch;padding:4px 20px 20px}
+mark{background:rgba(181,64,31,.16);color:var(--ink);padding:1px 2px;border-bottom:2px solid var(--accent)}
+.hl-search{display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:12px 20px}
+.hl-search input{flex:1;border:none;background:transparent;font-size:13px;min-width:0}
+.hl-search input:focus{outline:none}
+.hl-count{font:500 11px var(--mono);color:var(--ink2);white-space:nowrap}
+.err-note{padding:16px 20px;font:500 12.5px var(--mono);color:var(--red);line-height:1.6}
+
+/* ============ MODALES ============ */
+.overlay{position:fixed;inset:0;background:rgba(27,24,19,.58);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}}
+.dialog{background:var(--paper);border:1.5px solid var(--ink);box-shadow:10px 10px 0 rgba(27,24,19,.22);width:100%;max-width:580px;max-height:92vh;overflow-y:auto;animation:pop .25s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes pop{from{opacity:0;transform:translateY(16px) scale(.98)}}
+.pipe{padding:28px 30px}
+.pipe h3{font:600 24px var(--serif)}
+.pipe-file{font:500 11px var(--mono);color:var(--ink2);margin:6px 0 20px;word-break:break-all}
+.pipe ol{list-style:none}
+.pipe li{display:flex;gap:14px;padding:11px 0;border-bottom:1px solid var(--line);opacity:.45;transition:opacity .2s}
+.pipe li.active,.pipe li.done,.pipe li.error{opacity:1}
+.pipe li .st-ico{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--line2);border-radius:50%;margin-top:1px}
+.pipe li .st-ico svg{width:13px;height:13px}
+.pipe li.done .st-ico{border-color:var(--green);color:var(--green)}
+.pipe li.error .st-ico{border-color:var(--red);color:var(--red)}
+.pipe li.active .st-ico{border-color:var(--accent);color:var(--accent)}
+.pipe li.active .st-ico svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pipe li b{font:600 13.5px var(--sans)}
+.pipe li em{display:block;font:500 10.5px var(--mono);color:var(--ink2);font-style:normal;margin-top:3px;line-height:1.5}
+.pipe-result{margin-top:22px;padding:16px;border:1px dashed var(--line2);background:var(--card)}
+.pr-t{font:600 10.5px var(--mono);letter-spacing:.16em;color:var(--ink2);text-transform:uppercase;margin-bottom:10px}
+.pipe-foot{display:flex;gap:12px;justify-content:flex-end;margin-top:24px;flex-wrap:wrap}
+.confirm{padding:30px}
+.confirm h3{font:600 22px var(--serif);margin-bottom:10px}
+.confirm p{color:var(--ink2);font-size:14px;margin-bottom:24px}
+.confirm footer{display:flex;gap:12px;justify-content:flex-end}
+.up-form{padding:26px 30px}
+.up-form h3{font:600 24px var(--serif);margin-bottom:4px}
+.dropzone{border:2px dashed var(--line2);padding:36px 20px;text-align:center;cursor:pointer;transition:all .15s;background:var(--card);margin-top:16px}
+.dropzone:hover,.dropzone.over{border-color:var(--accent);background:#F5EFE0}
+.dropzone svg{width:26px;height:26px;color:var(--ink2);margin-bottom:10px}
+.dropzone p{font:600 14px var(--sans)}
+.dropzone small{font:500 10.5px var(--mono);color:var(--ink2)}
+.up-list{margin:14px 0 0;list-style:none}
+.up-list li{display:flex;justify-content:space-between;gap:12px;font:500 11.5px var(--mono);padding:8px 2px;border-bottom:1px solid var(--line)}
+.field-sel{margin-top:16px}
+.field-sel label{display:block;font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);margin-bottom:7px}
+.field-sel select{width:100%;border:1px solid var(--line2);background:var(--card);padding:9px;font-size:13px}
+.guide{padding:30px 32px}
+.guide h3{font:600 26px var(--serif);margin-bottom:4px}
+.guide .gs{font:500 11px var(--mono);color:var(--ink2);margin-bottom:20px}
+.guide h4{font:600 12px var(--sans);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+.guide ol{padding-left:18px}
+.guide li,.guide p{font-size:13px;color:var(--ink2);line-height:1.65}
+.guide table{width:100%;border-collapse:collapse;margin-top:6px}
+.guide td{font:500 11px var(--mono);padding:7px 8px;border-bottom:1px solid var(--line)}
+.guide td:first-child{color:var(--accent);font-weight:600;white-space:nowrap}
+.gnote{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;font:500 10.5px var(--mono);color:var(--ink2);line-height:1.7}
+
+/* ============ CHAT ============ */
+.chat-grid{display:grid;grid-template-columns:1fr 340px;gap:26px;align-items:stretch}
+.chat{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);min-height:560px}
+.chat-scroll{flex:1;overflow-y:auto;padding:26px 26px 12px}
+.chat-hero{text-align:center;padding:48px 26px}
+.ch-t{font:600 30px var(--serif);margin-bottom:8px}
+.ch-s{color:var(--ink2);font-size:13.5px;max-width:48ch;margin:0 auto 24px}
+.chat-suggest{display:flex;flex-direction:column;gap:8px;max-width:430px;margin:0 auto}
+.sug{font:500 13px var(--sans);border:1px solid var(--line2);background:var(--paper);padding:10px 14px;text-align:left;transition:all .12s;display:flex;gap:10px;align-items:center}
+.sug svg{width:13px;height:13px;color:var(--accent);flex-shrink:0}
+.sug:hover{border-color:var(--accent);color:var(--accent);transform:translateX(3px)}
+.msg{margin-bottom:22px;max-width:88%}
+.msg.user{margin-left:auto}
+.msg.user .msg-body{background:var(--ink);color:var(--paper);padding:12px 16px;font-size:14px;box-shadow:var(--sh)}
+.msg.ai{border-left:3px solid var(--accent);padding-left:16px}
+.msg-head{font:600 9.5px var(--mono);letter-spacing:.16em;color:var(--ink2);text-transform:uppercase;margin-bottom:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.conf{padding:1px 7px;border-radius:9px;font:600 9px var(--mono)}
+.conf-alta{background:rgba(62,107,79,.14);color:var(--green)}
+.conf-media{background:rgba(154,107,31,.16);color:var(--amber)}
+.conf-baja{background:rgba(160,45,20,.12);color:var(--red)}
+.msg-body{font-size:14px;line-height:1.65}
+.msg-body .ans-lead{margin-bottom:12px;font-weight:600}
+.cite{font:600 10px var(--mono);color:var(--accent);vertical-align:super}
+.ans-list{list-style:none;margin:8px 0 4px}
+.ans-list li{padding:9px 12px;border:1px solid var(--line);background:var(--paper);margin-bottom:8px;font-size:13.5px;line-height:1.6}
+.ans-total{margin-top:10px;padding:10px 14px;border:1.5px solid var(--ink);background:var(--paper);font:600 13px var(--mono)}
+.msg-sources{margin-top:12px}
+.ms-t{font:600 9px var(--mono);letter-spacing:.16em;color:var(--ink2);text-transform:uppercase;margin-bottom:8px}
+.src-btn{display:inline-flex;align-items:center;gap:8px;font:500 11px var(--mono);border:1px solid var(--line2);background:var(--paper);padding:5px 10px;margin:0 6px 6px 0;transition:all .12s;max-width:100%}
+.src-btn:hover{border-color:var(--accent);color:var(--accent)}
+.src-btn .sc{color:var(--ink2)}
+.typing{display:inline-flex;gap:5px;padding:12px 0}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--ink2);animation:tp 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes tp{0%,60%,100%{opacity:.25;transform:none}30%{opacity:1;transform:translateY(-4px)}}
+.chat-input{display:flex;border-top:1px solid var(--line)}
+.chat-input input{flex:1;border:none;background:transparent;padding:16px 20px;font-size:14.5px;min-width:0}
+.chat-input input:focus{outline:none}
+.chat-input button{width:64px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+.chat-input button:hover{background:var(--accent)}
+.chat-input button svg{width:17px;height:17px}
+.chat-side .panel-b{padding:18px 20px}
+.chat-side h4{font:600 11.5px var(--sans);margin:14px 0 7px;text-transform:uppercase;letter-spacing:.06em}
+.chat-side h4:first-child{margin-top:0}
+.chat-side p,.chat-side li{font-size:12.5px;color:var(--ink2);line-height:1.6}
+.chat-side ol{padding-left:18px;margin:6px 0}
+.idx-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:8px}
+.ist{background:var(--paper);text-align:center;padding:10px 4px}
+.ist .v{font:600 20px var(--serif)}
+.ist .l{font:600 8px var(--mono);letter-spacing:.1em;color:var(--ink2);text-transform:uppercase}
+.chat-side{position:sticky;top:0}
+
+/* ============ TOASTS ============ */
+#toasts{position:fixed;bottom:22px;right:22px;z-index:400;display:flex;flex-direction:column;gap:10px}
+.toast{display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);padding:12px 18px;font:500 13px var(--sans);box-shadow:5px 5px 0 rgba(27,24,19,.25);border-left:3px solid var(--green);animation:tin .25s ease;max-width:380px}
+.toast.error{border-left-color:var(--red)}
+.toast.info{border-left-color:var(--amber)}
+.toast svg{width:15px;height:15px;flex-shrink:0}
+.toast.out{opacity:0;transform:translateX(20px);transition:all .3s}
+@keyframes tin{from{opacity:0;transform:translateY(12px)}}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:1080px){.dash-grid,.chat-grid,.detail-grid{grid-template-columns:1fr}.stamp{display:none}.login{grid-template-columns:1fr}.login-brand{padding:40px 32px;min-height:auto}}
+@media (max-width:900px){
+  .app{grid-template-columns:60px 1fr}
+  .side-brand,.side-nav button .l,.side-nav button .n,.side-engine,.side-user .ut,.side-badge{display:none}
+  .side-nav button{justify-content:center;padding:14px 0}
+  .view{padding:24px 16px 60px}.topbar{padding:12px 16px}
+  .kpi{min-width:44%}
+}
+</style>
+</head>
+<body data-screen="login">
+
+<!-- ================== LOGIN ================== -->
+<section id="login" class="login">
+  <div class="login-brand">
+    <div class="brand-top">UTS · VI SEMESTRE · PROYECTO INTEGRADOR — DESARROLLO DE APLICACIONES EMPRESARIALES</div>
+    <h1 class="brand-title">El archivo<br>que <em>responde.</em></h1>
+    <p class="brand-sub">Sistema Inteligente de Gestión y Análisis Documental. Convierta un repositorio pasivo de PDF, DOCX y TXT en información clasificada, resumida, extraída, buscable y consultable en lenguaje natural.</p>
+    <ol class="brand-index">
+      <li><span>01</span> Repositorio documental con autenticación, roles y bitácora</li>
+      <li><span>02</span> Clasificación, resumen y extracción automáticos (IA local)</li>
+      <li><span>03</span> Búsqueda en contenido y asistente conversacional con citas</li>
+    </ol>
+    <svg class="stamp" viewBox="0 0 130 130">
+      <defs><path id="circ" d="M65,65 m-47,0 a47,47 0 1,1 94,0 a47,47 0 1,1 -94,0"/></defs>
+      <circle cx="65" cy="65" r="59" fill="none" stroke="currentColor" stroke-width="2.5"/>
+      <circle cx="65" cy="65" r="33" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <text font-size="9" letter-spacing="2.8" fill="currentColor" font-family="IBM Plex Mono, monospace"><textPath href="#circ">GESTIÓN DOCUMENTAL INTELIGENTE · SIGAD · UTS · </textPath></text>
+      <text x="65" y="62" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" font-family="IBM Plex Mono, monospace">NLP</text>
+      <text x="65" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" font-family="IBM Plex Mono, monospace">RAG</text>
+    </svg>
+    <div class="brand-foot">MOTOR: NAIVE BAYES · TF-IDF · RAG EXTRACTIVO — 100% LOCAL, SIN CLAVES NI SERVICIOS EXTERNOS</div>
+  </div>
+  <div class="login-form-wrap">
+    <form id="login-form" class="login-card" autocomplete="off">
+      <h2 id="auth-title">Iniciar sesión</h2>
+      <p class="auth-sub" id="auth-sub">Acceda al repositorio inteligente</p>
+      <div class="field hidden" id="f-name-wrap"><label>Nombre completo</label><input id="f-name" placeholder="Ana Pérez"></div>
+      <div class="field"><label>Usuario</label>
+        <div class="inwrap"><input id="f-user" placeholder="admin"></div>
+      </div>
+      <div class="field"><label>Contraseña</label>
+        <div class="inwrap"><input id="f-pass" type="password" placeholder="••••••••">
+        <button type="button" class="peek" id="peek" tabindex="-1" title="Mostrar contraseña"><i data-lucide="eye"></i></button></div>
+      </div>
+      <button class="btn wide" type="submit" id="auth-btn">Entrar</button>
+      <button type="button" class="linklike" id="auth-toggle">Crear una cuenta nueva</button>
+      <div class="quick">
+        <div class="qt">ACCESO RÁPIDO — SESIONES DE DEMOSTRACIÓN</div>
+        <div class="row">
+          <button type="button" id="demo-admin">Entrar como administrador</button>
+          <button type="button" id="demo-ana">Entrar como analista</button>
+        </div>
+      </div>
+      <p class="auth-error" id="auth-error"></p>
+    </form>
+  </div>
+</section>
+
+<!-- ================== APP ================== -->
+<div id="app">
+  <aside class="side">
+    <div class="side-brand">
+      <div class="side-logo">SI<b>GAD</b></div>
+      <div class="side-cap">GESTIÓN DOCUMENTAL INTELIGENTE</div>
+    </div>
+    <nav class="side-nav" id="side-nav">
+      <button data-route="panel"><i data-lucide="layout-dashboard"></i><span class="n">01</span><span class="l">Panel</span></button>
+      <button data-route="docs"><i data-lucide="file-text"></i><span class="n">02</span><span class="l">Documentos</span><span class="side-badge" id="nav-docs"></span></button>
+      <button data-route="repos"><i data-lucide="folder"></i><span class="n">03</span><span class="l">Repositorios</span></button>
+      <button data-route="chat"><i data-lucide="message-square"></i><span class="n">04</span><span class="l">Asistente IA</span></button>
+      <button data-route="log"><i data-lucide="activity"></i><span class="n">05</span><span class="l">Registro</span><span class="side-badge" id="nav-err"></span></button>
+      <button data-route="users" id="nav-users"><i data-lucide="users"></i><span class="n">06</span><span class="l">Usuarios</span></button>
+    </nav>
+    <div class="side-engine"><span class="dot"></span><span id="engine-st">Motor NLP · listo</span></div>
+    <div class="side-user" id="side-user"></div>
+  </aside>
+  <div class="main-col">
+    <header class="topbar">
+      <div class="crumb" id="crumb">Sección 01 — Panel</div>
+      <div class="top-actions">
+        <button class="iconbtn" id="btn-guide" title="Guía técnica (sustentación)"><i data-lucide="help-circle"></i></button>
+        <button class="btn small" id="btn-upload"><i data-lucide="upload"></i>Cargar documento</button>
+      </div>
+    </header>
+    <main id="view" class="view"><div class="view-inner" id="view-inner"></div></main>
+  </div>
+</div>
+
+<div id="overlay" class="overlay hidden"><div class="dialog" id="dialog"></div></div>
+<div id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.294.0/dist/umd/lucide.min.js"></script>
+<script>
+'use strict';
+/* pdf.js: worker remoto (requiere conexión para PDF; DOCX/TXT funcionan sin ella) */
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* ============================================================
+   1 · UTILIDADES
+============================================================ */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+const fmtBytes = n => n < 1024 ? n + ' B' : n < 1048576 ? (n/1024).toFixed(1) + ' KB' : (n/1048576).toFixed(1) + ' MB';
+const fmtTime = ts => new Date(ts).toLocaleString('es-CO', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+const countWords = t => t.split(/\s+/).filter(Boolean).length;
+const refreshIcons = () => { if (window.lucide) lucide.createIcons(); };
+const CAT_COLORS = { 'Factura':'#3E6B4F', 'Contrato':'#8C5A2B', 'Correspondencia':'#B5401F', 'Informe':'#46628C' };
+const EXT_OK = ['pdf','docx','txt'];
+const estadoLabel = s => ({pendiente:'PENDIENTE', procesando:'PROCESANDO', procesado:'PROCESADO', error:'ERROR'}[s] || s);
+
+const App = {
+  user:null, token:null, route:'panel', detailId:null, hl:[],
+  chat:[], pendingQuestion:'',
+  filters:{q:'',cat:'',fmt:'',repo:'',sort:'recent'},
+  repoMap:{}
+};
+
+/* ============================================================
+   2 · CAPA DE DATOS (IndexedDB)
+   stores: users · repos · docs (incluye el Blob original) ·
+   events · kv (sesiones y chat persistidos)
+============================================================ */
+const DB = (() => {
+  let db = null;
+  const open = () => new Promise((res, rej) => {
+    const r = indexedDB.open('sigad-db', 2);
+    r.onupgradeneeded = e => {
+      const d = e.target.result;
+      ['users','docs','repos','events','kv'].forEach(s => {
+        if (!d.objectStoreNames.contains(s)) d.createObjectStore(s, {keyPath:'id'});
+      });
+    };
+    r.onsuccess = e => { db = e.target.result; res(db); };
+    r.onerror = () => rej(r.error);
+  });
+  const st = (s, m) => db.transaction(s, m).objectStore(s);
+  const wrap = q => new Promise((res, rej) => { q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+  return {
+    open,
+    get:  (s,k) => wrap(st(s,'readonly').get(k)),
+    put:  (s,v) => wrap(st(s,'readwrite').put(v)),
+    del:  (s,k) => wrap(st(s,'readwrite').delete(k)),
+    all:  (s)   => wrap(st(s,'readonly').getAll()),
+    clear:(s)   => wrap(st(s,'readwrite').clear()),
+  };
+})();
+
+/* ============================================================
+   3 · CRIPTOGRAFÍA DE CONTRASEÑAS
+   SHA-256 (SubtleCrypto) con salt; si el entorno no lo permite
+   (file:// en algunos navegadores), cae a FNV-1a encadenado.
+   Se guarda el algoritmo usado y la verificación prueba ambos.
+============================================================ */
+async function sha256(str){
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+function fnv(str){
+  let h = 0x811c9dc5;
+  for (let round = 0; round < 4; round++){
+    for (const c of str){ h ^= c.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+    h ^= round + 1;
+  }
+  return h.toString(16) + '-' + (h >>> 7).toString(16);
+}
+async function computeHash(pw, salt, alg){
+  if (alg === 'sha256'){
+    try { return 'sha256:' + await sha256(salt + '::' + pw); } catch(e){}
+  }
+  return 'fnv:' + fnv(salt + '::' + pw);
+}
+const preferredAlg = () => (window.crypto && crypto.subtle) ? 'sha256' : 'fnv';
+async function verifyPass(pass, salt, stored){
+  return stored === await computeHash(pass, salt, 'sha256') ||
+         stored === await computeHash(pass, salt, 'fnv');
+}
+const pub = u => ({ id:u.id, name:u.name, user:u.user, role:u.role, created:u.created });
+
+/* ============================================================
+   4 · SESIONES (tokens persistidos, expiran a 7 días)
+============================================================ */
+const Sessions = (() => {
+  let map = {};
+  return {
+    async load(){
+      const r = await DB.get('kv','sessions');
+      map = r ? (r.value || {}) : {};
+      const now = Date.now();
+      let dirty = false;
+      for (const t of Object.keys(map)) if (now - map[t].ts > 7*864e5){ delete map[t]; dirty = true; }
+      if (dirty) await DB.put('kv', {id:'sessions', value:map});
+    },
+    set(token, userId){ map[token] = {userId, ts:Date.now()}; return DB.put('kv', {id:'sessions', value:map}); },
+    remove(token){ delete map[token]; return DB.put('kv', {id:'sessions', value:map}); },
+    userId(token){ const s = map[token]; return s ? s.userId : null; }
+  };
+})();
+
+/* ============================================================
+   5 · CAPA DE SERVICIOS — "BACKEND" SIMULADO
+   Cada operación valida sesión, aplica latencia, permisos y
+   registra eventos. Su estructura mapea 1:1 a endpoints REST
+   para la migración a un backend real.
+============================================================ */
+const LAT = () => sleep(90 + Math.random()*140);
+const srvLog = (level, comp, msg) =>
+  DB.put('events', { id:uid(), ts:Date.now(), level, comp, msg, user: App.user ? App.user.user : 'sistema' });
+
+const API = (() => {
+  const fail = (code, message) => { throw {code, message}; };
+  function require(token){
+    const userId = Sessions.userId(token);
+    if (!userId) fail('AUTH', 'Sesión no válida. Inicie sesión de nuevo.');
+    return userId;
+  }
+  async function byId(token, id){
+    const uid_ = require(token);
+    const u = await DB.get('users', uid_);
+    if (!u) fail('AUTH', 'Usuario no encontrado.');
+    return u;
+  }
+
+  return {
+    /* ---- AUTH ---- */
+    async login(user, pass){
+      await LAT();
+      const users = await DB.all('users');
+      const u = users.find(x => x.user === user.trim().toLowerCase());
+      if (!u || !(await verifyPass(pass, u.salt, u.hash))) fail('AUTH','Usuario o contraseña incorrectos.');
+      const token = uid();
+      await Sessions.set(token, u.id);
+      App.user = u; App.token = token;
+      localStorage.setItem('sigad_token', token);
+      await srvLog('INFO','Autenticación', `Inicio de sesión: ${u.user} (${u.role}).`);
+      return pub(u);
+    },
+    async register(name, user, pass){
+      await LAT();
+      if (name.trim().length < 3) fail('VAL','Escriba su nombre completo.');
+      if (user.trim().length < 3) fail('VAL','El usuario debe tener al menos 3 caracteres.');
+      if (pass.length < 6) fail('VAL','La contraseña debe tener al menos 6 caracteres.');
+      const users = await DB.all('users');
+      if (users.some(x => x.user === user.trim().toLowerCase())) fail('VAL','Ese nombre de usuario ya existe.');
+      const salt = uid();
+      const u = { id:uid(), name:name.trim(), user:user.trim().toLowerCase(), role:'analista',
+                  salt, hash: await computeHash(pass, salt, preferredAlg()), created:Date.now() };
+      await DB.put('users', u);
+      await srvLog('INFO','Autenticación', `Nueva cuenta registrada: ${u.user} (analista).`);
+      const token = uid();
+      await Sessions.set(token, u.id);
+      App.user = u; App.token = token;
+      localStorage.setItem('sigad_token', token);
+      return pub(u);
+    },
+    async logout(token){
+      try { require(token); await srvLog('INFO','Autenticación', `Cierre de sesión: ${App.user.user}.`); } catch(e){}
+      await Sessions.remove(token);
+    },
+
+    /* ---- USUARIOS (admin) ---- */
+    async listUsers(token){
+      const me = await byId(token);
+      if (me.role !== 'admin') fail('PERM','Solo el administrador puede gestionar usuarios.');
+      const [users, docs] = await Promise.all([DB.all('users'), DB.all('docs')]);
+      return users.map(u => ({...pub(u), docs: docs.filter(d => d.ownerId === u.id).length}));
+    },
+    async setRole(token, userId, role){
+      const me = await byId(token);
+      if (me.role !== 'admin') fail('PERM','Solo el administrador puede cambiar roles.');
+      if (!['admin','analista'].includes(role)) fail('VAL','Rol no válido.');
+      const u = await DB.get('users', userId);
+      if (!u) fail('VAL','Usuario no encontrado.');
+      await DB.put('users', {...u, role});
+      await srvLog('INFO','Usuarios', `Rol de "${u.user}" actualizado a ${role}.`);
+    },
+    async deleteUser(token, userId){
+      const me = await byId(token);
+      if (me.role !== 'admin') fail('PERM','Solo el administrador puede eliminar usuarios.');
+      if (userId === me.id) fail('VAL','No puede eliminar su propia cuenta.');
+      const u = await DB.get('users', userId);
+      if (!u) fail('VAL','Usuario no encontrado.');
+      await DB.del('users', userId);
+      await srvLog('WARN','Usuarios', `Usuario "${u.user}" eliminado; sus documentos permanecen en el repositorio.`);
+    },
+    async backup(token){
+      const me = await byId(token);
+      if (me.role !== 'admin') fail('PERM','Solo el administrador puede exportar respaldos.');
+      const [users, repos, docs, events] = await Promise.all([DB.all('users'), DB.all('repos'), DB.all('docs'), DB.all('events')]);
+      await srvLog('INFO','Respaldo','Respaldo JSON exportado (sin archivos binarios).');
+      return {
+        exportedAt:new Date().toISOString(), version:'1.0',
+        users:users.map(pub), repos,
+        docs:docs.map(d => { const {file, ...meta} = d; return meta; }),
+        events:events.slice(-300)
+      };
+    },
+
+    /* ---- REPOSITORIOS ---- */
+    async listRepos(token){ require(token); return (await DB.all('repos')).sort((a,b) => a.name.localeCompare(b.name)); },
+    async createRepo(token, name, desc){
+      require(token);
+      if (name.trim().length < 3) fail('VAL','El nombre debe tener al menos 3 caracteres.');
+      const r = {id:uid(), name:name.trim(), desc:desc.trim(), ownerId:App.user.id, created:Date.now()};
+      await DB.put('repos', r);
+      await srvLog('INFO','Repositorios', `Repositorio "${r.name}" creado.`);
+      return r;
+    },
+    async deleteRepo(token, repoId){
+      require(token);
+      if (repoId === 'general') fail('VAL','El repositorio "General" no puede eliminarse.');
+      const docs = await DB.all('docs');
+      const moved = docs.filter(d => d.repoId === repoId);
+      for (const d of moved) await DB.put('docs', {...d, repoId:'general'});
+      const r = await DB.get('repos', repoId);
+      await DB.del('repos', repoId);
+      await srvLog('WARN','Repositorios', `Repositorio "${r ? r.name : repoId}" eliminado; ${moved.length} documento(s) movidos a General.`);
+    },
+
+    /* ---- DOCUMENTOS ---- */
+    async listDocs(token){ require(token); return (await DB.all('docs')).sort((a,b) => b.uploadedAt - a.uploadedAt); },
+    async getDoc(token, id){ require(token); return DB.get('docs', id); },
+    async createDoc(token, file, repoId){
+      require(token);
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      if (!EXT_OK.includes(ext)) fail('VAL',`Formato .${ext} no soportado — solo PDF, DOCX y TXT.`);
+      if (file.size > 10*1024*1024) fail('VAL','El archivo supera el límite de 10 MB.');
+      const rec = { id:uid(), name:file.name, ext, size:file.size, repoId,
+        ownerId:App.user.id, ownerName:App.user.name, uploadedAt:Date.now(), status:'pendiente', file };
+      await DB.put('docs', rec);
+      await srvLog('INFO','Repositorios', `Documento "${rec.name}" cargado (${fmtBytes(rec.size)}).`);
+      return rec;
+    },
+    async deleteDoc(token, docId){
+      const me = await byId(token);
+      const d = await DB.get('docs', docId);
+      if (!d) fail('VAL','Documento no encontrado.');
+      if (me.role !== 'admin' && d.ownerId !== me.id) fail('PERM','Solo el propietario o un administrador puede eliminar este documento.');
+      await DB.del('docs', docId);
+      Index.remove(docId);
+      await srvLog('WARN','Repositorios', `Documento "${d.name}" eliminado por ${me.user}.`);
+    },
+    async clearEvents(token){
+      const me = await byId(token);
+      if (me.role !== 'admin') fail('PERM','Solo el administrador puede limpiar el registro.');
+      await DB.clear('events');
+      await srvLog('INFO','Registro','Bitácora limpiada por el administrador.');
+    },
+    async listEvents(token){
+      require(token);
+      const evs = (await DB.all('events')).sort((a,b) => b.ts - a.ts);
+      return App.user.role === 'admin' ? evs : evs.filter(e => e.user === App.user.user);
+    }
+  };
+})();
+
+/* ============================================================
+   6 · NLP — tokenizador, stopwords ES y stemming ligero
+============================================================ */
+const STOPWORDS = new Set(('de la que el en y a los del se las por un para con no una su al lo como mas pero sus le ya o este si ' +
+'porque esta entre cuando muy sin sobre tambien me hasta hay donde quien desde todo nos durante todos uno les ni contra ' +
+'otros ese eso ante ellos e esto mi antes algunos que unos yo otro otras otra tanto estos quienes nada muchos cual poco ' +
+'ella estar estas algunas algo nosotros mis tu te ti tus ellas usted ustedes ser es son fue fueron era han ha hemos haber ' +
+'tiene tienen tener sido muy ya cada vez aun sino Andres Andres').split(' ').filter(w => w.length > 1));
+
+function stemEs(w){
+  if (w.length <= 5) return w;
+  const suf = ['aciones','amiento','imientos','acion','cion','sion','mente','idades','idad','istas','ista','antes','ante','encias','encia','anzas','anza','ativa','ativo','ivas','ivos','osos','osa','able','ible','iento'];
+  for (const s of suf){ if (w.length - s.length >= 4 && w.endsWith(s)) return w.slice(0, -s.length); }
+  if (w.endsWith('es') && w.length - 2 >= 4) return w.slice(0, -2);
+  if (w.endsWith('s')  && w.length - 1 >= 4) return w.slice(0, -1);
+  return w;
+}
+function tokenizar(text){
+  const raw = String(text).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return (raw.match(/[a-z0-9]{2,}/g) || []).filter(w => !STOPWORDS.has(w)).map(stemEs);
+}
+const sentences = text => String(text).split(/\n+/).flatMap(p => (p.match(/[^.!?]+[.!?]+/g) || [p]));
+
+/* ============================================================
+   7 · CLASIFICADOR NAIVE BAYES (4 categorías)
+============================================================ */
+const NB = (() => {
+  const TRAIN = {
+    'Contrato': [
+      'clausula primera objeto del contrato entre las partes','las partes acuerdan celebrar el presente contrato de prestacion de servicios',
+      'obligaciones y derechos del contratista y del contratante','clausula penal por incumplimiento de las obligaciones contractuales',
+      'contrato de arrendamiento de inmueble urbano canon mensual','el arrendador entrega el inmueble al arrendatario en perfecto estado',
+      'plazo contractual de doce meses con renovacion automatica','terminacion anticipada del contrato por mutuo acuerdo de las partes',
+      'garantia deposito en calidad de caucion del contrato','representacion legal de las sociedades contratantes firma del documento'],
+    'Factura': [
+      'factura electronica de venta numero resolucion de facturacion','subtotal impuesto sobre las ventas iva y total a pagar',
+      'forma de pago transferencia electronica fecha de vencimiento','concepto honorarios profesionales valor unitario y cantidad',
+      'razon social del emisor y nit del vendedor comprador','descuentos y retencion en la fuente aplicada a la factura',
+      'medio de pago y moneda de la operacion comercial','nota credito por devolucion asociada a la factura',
+      'saldo pendiente de pago y estado de cartera vencida','detalle de bienes y servicios prestados unidades y precio unitario'],
+    'Correspondencia': [
+      'por medio de la presente me dirijo a usted cordialmente','estimado senor reciba un cordial saludo y mis mejores deseos',
+      'atentamente firma del remitente y destinatario del comunicado','memorando interno asunto politicas de la empresa',
+      'circular informativa para todos los empleados de la organizacion','agradecemos su pronta respuesta a esta comunicacion',
+      'informamos que la reunion se realizara la proxima semana','le notifico la renuncia presentada con el preaviso correspondiente',
+      'solicito respetuosamente su colaboracion en este asunto','comunicado oficial sobre el mantenimiento programado del sistema'],
+    'Informe': [
+      'informe ejecutivo de resultados y conclusiones del periodo','metodologia aplicada para el analisis de los datos recolectados',
+      'hallazgos y recomendaciones del estudio realizado','indicadores de desempeno y porcentaje de cumplimiento',
+      'antecedentes y objetivos especificos de la evaluacion','grafica comparativa de las variables analizadas',
+      'resumen ejecutivo con las conclusiones principales del informe','analisis de las variables y comportamiento observado',
+      'evaluacion del proyecto y desempeno del equipo de trabajo','seccion de resultados con tablas y datos estadisticos']
+  };
+  let model = null;
+  function train(){
+    const vocab = new Set(); const cats = {};
+    for (const [cat, docs] of Object.entries(TRAIN)){
+      let total = 0; const counts = new Map();
+      for (const d of docs) for (const t of tokenizar(d)){ vocab.add(t); counts.set(t,(counts.get(t)||0)+1); total++; }
+      cats[cat] = {total, counts};
+    }
+    model = {cats, V:vocab.size};
+  }
+  return { classify(text){
+    if (!model) train();
+    const toks = tokenizar(text);
+    const entries = Object.entries(model.cats).map(([cat,m]) => {
+      let s = 0;
+      for (const t of toks) s += Math.log(((m.counts.get(t)||0)+1)/(m.total+model.V+1));
+      return {cat, log:s};
+    });
+    const mx = Math.max(...entries.map(e => e.log));
+    const ex = entries.map(e => ({cat:e.cat, p:Math.exp(e.log-mx)}));
+    const sum = ex.reduce((a,b) => a+b.p, 0);
+    return ex.map(e => ({cat:e.cat, p:e.p/sum})).sort((a,b) => b.p-a.p);
+  }};
+})();
+
+/* ============================================================
+   8 · RESUMEN EXTRACTIVO (TF por oración)
+============================================================ */
+function summarize(text, max = 4){
+  const sents = sentences(text).map(s => s.trim()).filter(s => s.split(/\s+/).length >= 5);
+  if (sents.length <= 3) return sents;
+  const freq = new Map();
+  const tokS = sents.map(s => tokenizar(s));
+  tokS.forEach(ts => new Set(ts).forEach(t => freq.set(t,(freq.get(t)||0)+1)));
+  const maxF = Math.max(...freq.values(), 1);
+  const scored = sents.map((s,i) => {
+    let sc = 0; new Set(tokS[i]).forEach(t => sc += (freq.get(t)||0)/maxF);
+    if (s.split(/\s+/).length > 45) sc *= .6;
+    if (i === 0) sc *= 1.25;
+    return {s, i, sc};
+  });
+  const n = Math.min(max, Math.max(3, Math.round(sents.length*.22)));
+  return scored.sort((a,b) => b.sc-a.sc).slice(0,n).sort((a,b) => a.i-b.i).map(x => x.s);
+}
+
+/* ============================================================
+   9 · EXTRACCIÓN DE ENTIDADES (7 tipos)
+============================================================ */
+function extractEntities(text){
+  const out = {fechas:[], montos:[], correos:[], telefonos:[], identificaciones:[], personas:[], organizaciones:[]};
+  const push = (arr,v) => { v = String(v).trim().replace(/\s+/g,' '); if (v && !arr.includes(v) && arr.length < 12) arr.push(v); };
+  const grab = r => { const a = []; let m; while ((m = r.exec(text))) a.push(m); return a; };
+  const meses = 'enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre';
+  grab(new RegExp('\\b\\d{1,2}\\s+de\\s+(?:'+meses+')\\s+(?:de\\s+)?\\d{4}\\b','gi')).forEach(x => push(out.fechas,x[0]));
+  grab(/\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/g).forEach(x => push(out.fechas,x[0]));
+  grab(/\b\d{4}-\d{2}-\d{2}\b/g).forEach(x => push(out.fechas,x[0]));
+  grab(/\b(?:COP|USD|EUR)\s?\$?\s?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?\b/g).forEach(x => push(out.montos,x[0]));
+  grab(/\$\s?\d{1,3}(?:\.\d{3})+(?:,\d{2})?/g).forEach(x => push(out.montos,x[0]));
+  grab(/\b\d{1,3}(?:[.,]\d{3})*\s?(?:pesos|dolares|dólares)\b/gi).forEach(x => push(out.montos,x[0]));
+  grab(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g).forEach(x => push(out.correos,x[0]));
+  grab(/(?:\+\d{1,3}[\s\-]?)?\(?\d{2,4}\)?[\s\-]?\d{3}[\s\-]?\d{2,4}(?:[\s\-]?\d{2,4})?/g).forEach(x => {
+    const d = (x[0].match(/\d/g) || []).length;
+    if (d >= 7 && d <= 11) push(out.telefonos, x[0]);
+  });
+  grab(/\b(?:NIT|N\.I\.T|CC|C\.C|CE)\.?\s*[:#]?\s*\d[\d.\-]{3,}/g).forEach(x => push(out.identificaciones,x[0]));
+  grab(/\b(?:Sr|Sra|Srta|Dr|Dra|Don|Doña|Ing|Abg)\.?\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){0,3}/g).forEach(x => push(out.personas,x[0]));
+  grab(/\b[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ]+){0,3}\s+(?:S\.?\s?A\.?\s?S?\.?|Ltda\.?|S\.?\s?L\.?|&\s?Cía\.?)\b/g).forEach(x => push(out.organizaciones,x[0]));
+  grab(/\b(?:Fundación|Universidad|Empresa|Corporación|Compañía|Cooperativa|Banco|Hospital|Centro|Inversiones|Comercializadora|Distribuidora|Logística|TecnoSuministros|Colegio|Panadería|Escuela|Clínica|Constructora|Agencia)\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ][a-záéíóúñ]+){0,2}/g).forEach(x => push(out.organizaciones,x[0]));
+  return out;
+}
+const ENT_LABELS = {fechas:'Fechas', montos:'Montos y valores', correos:'Correos electrónicos', telefonos:'Teléfonos',
+  identificaciones:'Identificaciones', personas:'Personas', organizaciones:'Organizaciones'};
+function toNum(v){
+  let s = String(v).replace(/[^\d.,]/g,'');
+  if (!s) return 0;
+  if (s.includes(',')) s = s.replace(/\./g,'').replace(/,/g,'.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,'');
+  return parseFloat(s) || 0;
+}
+
+/* ============================================================
+   10 · ÍNDICE TF-IDF + EXPANSIÓN LÉXICA
+============================================================ */
+const SYN_GROUPS = [
+  ['pago','factura','valor','saldo','abono','pagar','pendiente','total'],
+  ['contrato','clausula','acuerdo','partes','contratante','contratista','celebrar'],
+  ['plazo','vence','vencimiento','fecha','vigencia','renovacion','terminacion'],
+  ['empleado','trabajador','personal','nomina','salario','sueldo'],
+  ['empresa','compañia','organizacion','razon','social','sociedad'],
+  ['informe','analisis','resultado','conclusion','indicador','hallazgo'],
+  ['servicio','honorario','profesional','mantenimiento'],
+  ['arrendamiento','canon','inmueble','arriendo','arrendador','arrendatario'],
+  ['reunion','acta','comite','sesion','asistente'],
+  ['seguridad','politica','confidencialidad','dato','proteccion']
+];
+function expand(q){
+  const base = tokenizar(q);
+  const out = new Map();
+  base.forEach(t => out.set(t, 1));
+  base.forEach(t => {
+    for (const g of SYN_GROUPS){
+      const gs = g.map(stemEs);
+      if (gs.includes(t)) gs.forEach(s2 => { if (s2 !== t) out.set(s2, Math.max(out.get(s2)||0, .7)); });
+    }
+  });
+  return [...out].map(([t,w]) => ({t,w}));
+}
+const Index = (() => {
+  const docsTf = new Map(), df = new Map(), docsSents = new Map();
+  function add(id, text){
+    remove(id);
+    const tf = new Map();
+    tokenizar(text).forEach(t => tf.set(t,(tf.get(t)||0)+1));
+    docsTf.set(id, tf);
+    for (const t of tf.keys()) df.set(t,(df.get(t)||0)+1);
+    docsSents.set(id, sentences(text).filter(s => s.split(/\s+/).length >= 4)
+      .map(s => ({text:s.trim(), terms:new Set(tokenizar(s))})));
+  }
+  function remove(id){
+    const tf = docsTf.get(id);
+    if (tf){
+      for (const t of tf.keys()){ const n = (df.get(t)||1)-1; n <= 0 ? df.delete(t) : df.set(t,n); }
+      docsTf.delete(id); docsSents.delete(id);
+    }
+  }
+  return {
+    add, remove,
+    rebuild(all){ docsTf.clear(); df.clear(); docsSents.clear();
+      all.filter(d => d.status === 'procesado' && d.text).forEach(d => add(d.id, d.text)); },
+    stats(){ let f = 0; docsSents.forEach(v => f += v.length); return {docs:docsTf.size, fragments:f, vocab:df.size}; },
+    scoreQuery(q){
+      const qt = expand(q); const res = [];
+      docsTf.forEach((tf,id) => {
+        let s = 0, hits = 0;
+        qt.forEach(({t,w}) => { const f = tf.get(t); if (f){ hits++; s += w*(1+Math.log(f))*Math.log(1+docsTf.size/(df.get(t)||1)); } });
+        if (hits) res.push({id, score:s/Math.sqrt(tf.size+1)});
+      });
+      return res.sort((a,b) => b.score-a.score);
+    },
+    bestSnippets(id, q, n = 2){
+      const qt = expand(q).map(x => x.t);
+      return (docsSents.get(id) || []).map((s,i) => {
+        let sc = 0; qt.forEach(t => { if (s.terms.has(t)) sc++; });
+        return {text:s.text, sc, i};
+      }).filter(x => x.sc > 0).sort((a,b) => b.sc-a.sc).slice(0,n).map(x => x.text);
+    },
+    highlightTerms(q){ return expand(q).filter(x => x.t.length >= 4).map(x => x.t); }
+  };
+})();
+function looseRegex(term){
+  const map = {a:'aáà', e:'eéè', i:'iíì', o:'oóò', u:'uúüù'};
+  const pat = term.split('').map(ch => map[ch] ? '[' + map[ch] + ']' : ch).join('');
+  return new RegExp('\\b' + pat + '\\w{0,3}', 'gi');
+}
+function highlight(text, terms){
+  let html = esc(text);
+  (terms || []).filter(t => /^[a-z0-9]{4,}$/.test(t)).forEach(t => {
+    html = html.replace(looseRegex(t), m => '<mark>' + m + '</mark>');
+  });
+  return html;
+}
+
+/* ============================================================
+   11 · RAG EXTRACTIVO — consulta en lenguaje natural
+============================================================ */
+function detectIntent(q){
+  const l = q.toLowerCase();
+  if (/(cuanto|cuánto|valor|total|monto|precio|costo|suma|pagar|pago|recaudo)/.test(l)) return 'money';
+  if (/(cuando|cuándo|fecha|plazo|vence|vencimiento|vigencia|hasta)/.test(l)) return 'date';
+  if (/(quien|quién|quienes|quiénes|responsable|empresa|persona|emisor|remitente|parte|contratante)/.test(l)) return 'who';
+  return 'what';
+}
+async function askCore(q){
+  const ranked = Index.scoreQuery(q).slice(0,4);
+  const terms = Index.highlightTerms(q);
+  if (!ranked.length || ranked[0].score < .015) return {type:'none', q, terms, conf:0, sources:[], html:''};
+  const docs = await DB.all('docs');
+  const byId = Object.fromEntries(docs.map(d => [d.id,d]));
+  const sources = ranked.map(r => ({
+    id:r.id, name:(byId[r.id] ? byId[r.id].name : '—'), score:r.score,
+    snippets:Index.bestSnippets(r.id, q, 2)
+  })).filter(s => s.snippets.length);
+  if (!sources.length) return {type:'none', q, terms, conf:0, sources:[], html:''};
+  const conf = Math.min(1, ranked[0].score*2.2);
+  const intent = detectIntent(q);
+  const cited = s => '<span class="cite">[' + (sources.indexOf(s)+1) + ']</span>';
+  let body = '';
+  if (intent === 'money'){
+    let total = 0, n = 0;
+    const rows = sources.map(s => {
+      const ents = extractEntities(s.snippets.join(' '));
+      if (!ents.montos.length) return '';
+      ents.montos.forEach(v => { total += toNum(v); n++; });
+      return '<li><b>' + esc(s.name) + '</b> — ' + ents.montos.map(v => '<span class="mono">' + esc(v) + '</span>').join(' · ') + ' ' + cited(s) + '</li>';
+    }).filter(Boolean).join('');
+    if (!rows) return askGeneric(sources, terms, cited);
+    body = '<p class="ans-lead">Encontré ' + n + ' menciones de valores en ' + sources.length + ' documento(s):</p><ul class="ans-list">' + rows + '</ul>' +
+      (n > 1 ? '<div class="ans-total">Σ Valores detectados: $' + total.toLocaleString('es-CO') + '</div>' : '');
+  } else if (intent === 'date'){
+    const rows = sources.map(s => {
+      const ents = extractEntities(s.snippets.join(' '));
+      if (!ents.fechas.length) return '';
+      return '<li><b>' + esc(s.name) + '</b> — ' + ents.fechas.map(v => '<span class="mono">' + esc(v) + '</span>').join(' · ') + ' ' + cited(s) + '</li>';
+    }).filter(Boolean).join('');
+    if (!rows) return askGeneric(sources, terms, cited);
+    body = '<p class="ans-lead">Fechas relevantes encontradas en el repositorio:</p><ul class="ans-list">' + rows + '</ul>';
+  } else if (intent === 'who'){
+    const rows = sources.map(s => {
+      const ents = extractEntities(s.snippets.join(' '));
+      const all = [...ents.personas.slice(0,3), ...ents.organizaciones.slice(0,2)];
+      if (!all.length) return '';
+      return '<li><b>' + esc(s.name) + '</b> — ' + all.map(v => esc(v)).join(' · ') + ' ' + cited(s) + '</li>';
+    }).filter(Boolean).join('');
+    if (!rows) return askGeneric(sources, terms, cited);
+    body = '<p class="ans-lead">Actores identificados en los documentos más relevantes:</p><ul class="ans-list">' + rows + '</ul>';
+  } else {
+    body = askBody(sources, terms, cited);
+  }
+  return {type:'answer', intent, conf, terms, sources, html:body};
+}
+function askBody(sources, terms, cited){
+  const picks = [];
+  sources.slice(0,3).forEach(s => { if (s.snippets[0]) picks.push({s, text:s.snippets[0]}); });
+  return '<p class="ans-lead">Según ' + picks.length + ' fragmento(s) recuperado(s) del repositorio:</p><ul class="ans-list">' +
+    picks.map(p => '<li>' + highlight(p.text, terms) + ' ' + cited(p.s) + '</li>').join('') + '</ul>';
+}
+function askGeneric(sources, terms, cited){
+  return {type:'answer', intent:'what', conf:.25, terms, sources,
+    html: askBody(sources, terms, cited)};
+}
+
+/* ============================================================
+   12 · PIPELINE DE PROCESAMIENTO
+============================================================ */
+async function extractText(file, ext){
+  if (ext === 'pdf'){
+    if (!window.pdfjsLib) throw new Error('Librería pdf.js no disponible (verifique su conexión) para este PDF.');
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+    const pages = [];
+    for (let p = 1; p <= pdf.numPages; p++){
+      const pg = await pdf.getPage(p);
+      const tc = await pg.getTextContent();
+      pages.push(tc.items.map(it => it.str + (it.hasEOL ? '\n' : ' ')).join(''));
+    }
+    return {text:pages.join('\n'), pages:pdf.numPages};
+  }
+  if (ext === 'docx'){
+    if (!window.mammoth) throw new Error('Librería mammoth.js no disponible (verifique su conexión) para este DOCX.');
+    const buf = await file.arrayBuffer();
+    const r = await mammoth.extractRawText({arrayBuffer:buf});
+    return {text:r.value, pages:null};
+  }
+  return {text:await file.text(), pages:null};
+}
+async function analyzeCore(rec, file, ui){
+  const step = (k,s) => ui && ui.step(k,s);
+  const det = (k,t) => ui && ui.detail(k,t);
+  let cur = 'extract';
+  try {
+    await DB.put('docs', {...rec, status:'procesando'});
+    step('extract','active'); await sleep(280);
+    const {text, pages} = await extractText(file, rec.ext);
+    det('extract', (pages ? pages + ' páginas · ' : '') + text.length.toLocaleString('es-CO') + ' caracteres (' + rec.ext.toUpperCase() + ')');
+    if (!text || text.replace(/\s+/g,'').length < 20)
+      throw new Error('Sin contenido legible (posible documento escaneado: requeriría OCR en producción).');
+
+    cur = 'token'; step('token','active'); await sleep(220);
+    const raw = countWords(text), toks = tokenizar(text);
+    det('token', raw + ' palabras · ' + toks.length + ' tokens útiles (stopwords ES filtradas)');
+
+    cur = 'class'; step('class','active'); await sleep(280);
+    const probs = NB.classify(text);
+    det('class', probs[0].cat + ' · ' + (probs[0].p*100).toFixed(1) + '% de confianza');
+
+    cur = 'sum'; step('sum','active'); await sleep(220);
+    const summary = summarize(text, 4);
+    det('sum', summary.length + ' oraciones clave (puntuación TF)');
+
+    cur = 'ner'; step('ner','active'); await sleep(240);
+    const ents = extractEntities(text);
+    const nEnt = Object.values(ents).reduce((a,b) => a+b.length, 0);
+    det('ner', nEnt + ' entidades · 7 tipos');
+
+    cur = 'index'; step('index','active'); await sleep(200);
+    const final = {...rec, status:'procesado',
+      text: text.length > 300000 ? text.slice(0,300000) : text,
+      pages, wordCount:raw, category:probs[0].cat, categoryProbs:probs,
+      summary, entities:ents, analysisAt:Date.now()};
+    await DB.put('docs', final);
+    Index.add(final.id, final.text);
+    step('index','done');
+    det('index', 'Índice TF-IDF actualizado · vocabulario: ' + Index.stats().vocab + ' términos');
+    await srvLog('INFO','Pipeline','Documento "' + rec.name + '" procesado — ' + probs[0].cat + ' (' + (probs[0].p*100).toFixed(0) + '%).');
+    return final;
+  } catch(err){
+    await DB.put('docs', {...rec, status:'error', error:String(err.message || err)});
+    step(cur,'error');
+    await srvLog('ERROR','Pipeline','Fallo al procesar "' + rec.name + '": ' + (err.message || err));
+    return null;
+  }
+}
+
+/* ============================================================
+   13 · CORPUS DE DEMOSTRACIÓN (sintético, sin datos reales)
+============================================================ */
+const DEMO_DOCS = [
+{name:'factura_FE-001.txt',text:`FACTURA ELECTRONICA DE VENTA No. FE-001
+Servicios Contables Andes S.A.S. — NIT 901.234.567-8
+Calle 45 No. 12-30, Bucaramanga, Santander — Telefono: (607) 655-1234
+Correo: facturacion@contablesandes.com
+
+Cliente: Comercializadora El Roble S.A.S. — NIT 900.876.543-2
+Fecha de expedicion: 15 de marzo de 2024
+Fecha de vencimiento: 30 de abril de 2024
+
+Concepto: Honorarios contables primer trimestre 2024
+Cantidad: 3 unidades — Valor unitario $450.000
+Subtotal: $1.350.000 — IVA (19%): $256.500
+TOTAL A PAGAR: COP $1.606.500
+Forma de pago: transferencia electronica
+Resolucion de facturacion DIAN No. 18764000012345
+
+La presente factura constituye titulo valor conforme al articulo 774 del Codigo de Comercio.`},
+{name:'factura_FE-002.txt',text:`FACTURA ELECTRONICA DE VENTA No. FE-002
+TecnoSuministros del Oriente S.A.S. — NIT 901.222.334-1
+Cliente: Colegio San Rafael — NIT 800.112.233-4
+Fecha: 2 de mayo de 2024 — Vencimiento: 1 de junio de 2024
+
+Concepto: Suministro de 10 equipos portatiles institucionales
+Valor unitario: $1.840.000 — Subtotal: $18.400.000
+Descuento comercial (5%): $920.000
+IVA (19%): $3.311.600
+TOTAL: COP $20.791.600
+Medio de pago: consignacion bancaria
+Retencion en la fuente aplicada segun tabla vigente.`},
+{name:'factura_FE-003.txt',text:`FACTURA DE VENTA No. FE-003
+Mantenimientos Industriales JR Ltda. — NIT 900.555.666-7
+Cliente: Panaderia La Espiga
+Fecha de expedicion: 20 de junio de 2024
+Fecha de vencimiento: 20 de julio de 2024
+
+Concepto: Mantenimiento preventivo de horno industrial
+3 horas de mano de obra a $150.000 — repuestos $500.000
+Subtotal: $950.000 — IVA: $180.500
+TOTAL A PAGAR: $1.130.500 pesos
+Forma de pago: efectivo`},
+{name:'contrato_arrendamiento_2024.txt',text:`CONTRATO DE ARRENDAMIENTO
+Entre los suscritos: Sr. Ricardo Gomez Peña, mayor de edad, identificado con CC 1.023.456.789, en su calidad de ARRENDADOR, y la empresa Inversiones Roble Verde S.A.S., NIT 901.456.789-0, representada legalmente por la Sra. Marcela Torres Quinones, como ARRENDATARIA, se celebra el presente contrato.
+
+CLÁUSULA PRIMERA - OBJETO: dar en arrendamiento el inmueble urbano ubicado en la Carrera 27 No. 34-15 de Bucaramanga, destinado a oficina comercial.
+
+CLÁUSULA SEGUNDA - CANON: valor mensual de COP $2.500.000, pagadero dentro de los primeros cinco dias de cada mes.
+
+CLÁUSULA TERCERA - PLAZO: doce (12) meses a partir del 1 de febrero de 2024, con renovacion automatica anual.
+
+CLÁUSULA CUARTA - GARANTIA: deposito equivalente a dos mensualidades en calidad de caucion.
+
+CLÁUSULA QUINTA - TERMINACION: cualquiera de las partes podra dar por terminado el contrato con preaviso de sesenta (60) dias.
+
+Se firma en Bucaramanga el 20 de enero de 2024.`},
+{name:'contrato_prestacion_servicios.txt',text:`CONTRATO DE PRESTACION DE SERVICIOS PROFESIONALES
+Entre Tecnologia Andina S.A.S., NIT 900.321.654-9, y la Ing. Laura Martinez Rueda, identificada con CC 52.441.908, se acuerda:
+
+CLÁUSULA PRIMERA - OBJETO: desarrollo de la plataforma web de gestion interna de la empresa.
+
+CLÁUSULA SEGUNDA - CONTRAPRESTACION: honorarios mensuales de $8.500.000, pagaderos el ultimo dia habil de cada mes.
+
+CLÁUSULA TERCERA - PLAZO: seis (6) meses contados a partir del 15 de enero de 2024.
+
+CLÁUSULA CUARTA - CONFIDENCIALIDAD: la contratista se obliga a guardar confidencialidad sobre la informacion tecnica de la empresa.
+
+CLÁUSULA QUINTA - TERMINACION ANTICIPADA: con treinta (30) dias de preaviso escrito.
+
+Contacto contractual: lmartinez@tecnologiaandina.com — Telefono (607) 689-4545.`},
+{name:'contrato_confidencialidad.txt',text:`CONTRATO DE CONFIDENCIALIDAD
+Entre la Corporacion Biosalud SG y el Dr. Andres Camargo Silva, identificado con CC 79.887.665, se celebra el presente acuerdo de confidencialidad.
+
+CLÁUSULA PRIMERA - OBJETO: proteger la informacion clinica y administrativa de la corporacion a la que el contratista tendra acceso.
+
+CLÁUSULA SEGUNDA - VIGENCIA: tres (3) anos contados a partir del 10 de marzo de 2024.
+
+CLÁUSULA TERCERA - CLÁUSULA PENAL: el incumplimiento generara una penalidad de $5.000.000 pesos por cada violacion.
+
+CLÁUSULA CUARTA - TERMINACION: las partes podran terminar el acuerdo por mutuo consentimiento escrito.
+
+Firmado en Floridablanca, Santander, el 10 de marzo de 2024.`},
+{name:'carta_renuncia.txt',text:`Bucaramanga, 2 de septiembre de 2024
+
+Senora
+Maria Fernanda Ossa
+Gerente de Recursos Humanos
+Distribuidora El Puerto S.A.S.
+Estimada senora:
+
+Por medio de la presente me permito comunicar mi decision de renunciar al cargo de Asistente Administrativa que ocupo en la empresa, presentado con el preaviso de treinta (30) dias exigido por el contrato.
+
+Mi ultima jornada laboral sera el 30 de septiembre de 2024. Agradezco sinceramente la confianza depositada durante mis tres anos de vinculacion y el acompanamiento de todo el equipo.
+
+Quedo atenta al proceso de entrega y a la liquidacion correspondiente.
+
+Atentamente,
+Sra. Diana Salazar Ortiz
+CC 43.334.556 — diana.salazar@correo.com`},
+{name:'memorando_politicas.txt',text:`MEMORANDO INTERNO No. RH-045
+
+Empresa: Logistica Central S.A.S.
+De: Dr. Samuel Restrepo, Direccion de Talento Humano
+Para: Todos los empleados
+Asunto: Nueva politica de trabajo en modo hibrido
+Fecha: 18 de julio de 2024
+
+Cordial saludo. Informamos que a partir del 1 de agosto de 2024 entra en vigencia la politica de trabajo hibrido, con dos dias presenciales y tres dias remotos.
+
+Se realizara una reunion informativa el jueves 25 de julio de 2024 a las 9:00 a.m. en el auditorio principal para resolver inquietudes.
+
+Agradecemos su compromiso con los objetivos de la organizacion y su adaptacion al nuevo esquema.
+
+Atentamente,
+Direccion de Talento Humano`},
+{name:'comunicado_mantenimiento.txt',text:`COMUNICADO OFICIAL PARA USUARIOS
+
+Sistema de Gestion Comercial — Logistica Central S.A.S.
+
+Informamos a todos los usuarios que el sabado 10 de agosto de 2024 se realizara un mantenimiento programado del sistema de facturacion electronica. Durante el mantenimiento, estimado en cuatro (4) horas entre las 8:00 p.m. y las 12:00 p.m., la plataforma no estara disponible.
+
+Ante cualquier inconvenient durante la jornada, la Mesa de Ayuda atendera en el telefono +57 607 654 3210 extension 115 y en el correo soporte@logisticacentral.com.
+
+Agradecemos su comprension y colaboracion.
+
+Atentamente,
+Area de Sistemas y Tecnologia`},
+{name:'informe_desempeno_Q1.txt',text:`INFORME DE DESEMPEÑO COMERCIAL — PRIMER TRIMESTRE 2024
+Comercializadora El Roble S.A.S.
+
+RESUMEN EJECUTIVO: durante el primer trimestre la compania alcanzo ventas por $84.300.000, con un cumplimiento del 106% frente a la meta establecida.
+
+METODOLOGIA: analisis de los indicadores de ventas, devoluciones y cartera, con base en los datos recolectados por el equipo comercial durante los meses de enero, febrero y marzo de 2024.
+
+HALLAZGOS: la linea de productos industrial presento un crecimiento del 18%; la cartera morosa se redujo al 3,2%; el porcentaje de devoluciones se mantuvo en 1,4%.
+
+RECOMENDACIONES: fortalecer la gestion de cobro prejuridico y ampliar el inventario de la linea industrial.
+
+CONCLUSIONES: el desempeno del trimestre supera las expectativas y proyecta un cierre de ano favorable.
+
+Elaborado por: Ana Maria Pineda, Directora Comercial — Bucaramanga, 5 de abril de 2024.`},
+{name:'informe_auditoria_interna.txt',text:`INFORME DE AUDITORIA INTERNA 2024
+Comercializadora El Roble S.A.S.
+
+ANTECEDENTES: la auditoria interna anual se realizo entre el 1 y el 30 de junio de 2024 conforme al plan aprobado por el Comite de Auditoria.
+
+METODOLOGIA: revision documental de procesos contables, compras y contratacion, mediante muestreo aleatorio de transacciones.
+
+HALLAZGOS: se identificaron tres (3) observaciones menores relacionadas con soportes de compra incompletos. No se evidenciaron hallazgos de fraude.
+
+INDICADORES: porcentaje de cumplimiento global del sistema de control interno: 92%.
+
+RECOMENDACIONES: documentar completamente los soportes contables y capacitar al personal auxiliar en el procedimiento de compras.
+
+CONCLUSIONES: el sistema de control interno opera de manera razonablemente eficaz.
+
+Elaborado por: Abg. Felipe Ruiz Guzman, Auditor Interno — Bucaramanga, 12 de julio de 2024.`},
+{name:'acta_reunion_comite.txt',text:`ACTA DE COMITE DE OPERACIONES No. 08
+Logistica Central S.A.S. — 8 de agosto de 2024 — 10:00 a.m.
+
+ASISTENTES: Ing. Oscar Villamizar (Direccion de Operaciones), Sra. Paula Andrea Nieto (Jefe de Calidad), Sr. Camilo Andres Rueda (Supervisor de Bodega).
+
+AGENDA: seguimiento de indicadores logisticos del mes, estado del inventario y programacion de la temporada alta.
+
+ACUERDOS:
+1. Aumentar la frecuencia del conteo ciclico de inventario a semanal.
+2. Gestionar el mantenimiento de dos montacargas antes del 30 de septiembre de 2024.
+3. Informar semanalmente el indicador de entregas a tiempo, actualmente en 94,5%.
+
+PENDIENTES: cotizacion del mantenimiento (Sra. Nieto) y actualizacion del procedimiento de despacho (Sr. Rueda).
+
+La proxima sesion del comite se realizara el 5 de septiembre de 2024.
+
+Sin mas asuntos que tratar, se levanta la sesion siendo las 11:40 a.m.`}
+];
+
+/* ============================================================
+   14 · TOASTS Y MODALES
+============================================================ */
+function toast(msg, type = 'info'){
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = '<i data-lucide="' + (type==='ok'?'check':type==='error'?'alert-triangle':'info') + '"></i><span>' + esc(msg) + '</span>';
+  $('#toasts').appendChild(t); refreshIcons();
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, 3600);
+}
+function openModal(html){
+  $('#dialog').innerHTML = html;
+  $('#overlay').classList.remove('hidden');
+  refreshIcons();
+}
+function closeModal(){ $('#overlay').classList.add('hidden'); $('#dialog').innerHTML = ''; }
+function confirmDialog({title, msg, okLabel = 'Eliminar'}){
+  return new Promise(res => {
+    openModal('<div class="confirm"><h3>' + esc(title) + '</h3><p>' + esc(msg) + '</p>' +
+      '<footer><button class="btn btn-ghost" data-close>Cancelar</button>' +
+      '<button class="btn btn-danger" id="cf-ok">' + esc(okLabel) + '</button></footer></div>');
+    const done = v => { closeModal(); res(v); };
+    $('#dialog').querySelector('[data-close]').onclick = () => done(false);
+    $('#cf-ok').onclick = () => done(true);
+    $('#overlay').onclick = e => { if (e.target.id === 'overlay') done(false); };
+  });
+}
+
+/* ============================================================
+   15 · PIPELINE UI (modal con pasos en vivo)
+============================================================ */
+const PIPE_STEPS = [
+  {k:'extract', t:'Extracción de contenido', d:'pdf.js (PDF) · mammoth.js (DOCX) · FileReader (TXT)'},
+  {k:'token',   t:'Tokenización y limpieza', d:'Normalización, stopwords ES, stemming ligero'},
+  {k:'class',   t:'Clasificación automática', d:'Naive Bayes multinomial · corpus interno · Laplace'},
+  {k:'sum',     t:'Resumen extractivo', d:'Puntuación de oraciones por frecuencia de términos (TF)'},
+  {k:'ner',     t:'Extracción de entidades', d:'7 tipos: fechas, montos, correos, teléfonos, IDs, personas, organizaciones'},
+  {k:'index',   t:'Indexado TF-IDF', d:'Índice invertido para búsqueda y consulta RAG'}
+];
+const pipeModalHTML = () =>
+  '<div class="pipe"><h3>Procesamiento con IA</h3>' +
+  '<div class="pipe-file mono" id="pipe-file">—</div><ol>' +
+  PIPE_STEPS.map(s => '<li id="st-' + s.k + '"><span class="st-ico"><i data-lucide="circle"></i></span>' +
+    '<div><b>' + s.t + '</b><em id="d-' + s.k + '">' + s.d + '</em></div></li>').join('') +
+  '</ol><div class="pipe-result hidden" id="pipe-result"></div></div>';
+function pipelineUI(){
+  return {
+    step(k, s){
+      const li = $('#st-' + k); if (!li) return;
+      li.className = s;
+      li.querySelector('.st-ico').innerHTML = '<i data-lucide="' +
+        (s === 'active' ? 'loader-2' : s === 'done' ? 'check' : s === 'error' ? 'alert-triangle' : 'circle') + '"></i>';
+      refreshIcons();
+    },
+    detail(k, t){ const d = $('#d-' + k); if (d) d.textContent = t; }
+  };
+}
+function resetPipe(){
+  $('#pipe-result').classList.add('hidden');
+  const ui = pipelineUI();
+  PIPE_STEPS.forEach(s => { ui.step(s.k, ''); ui.detail(s.k, s.d); });
+}
+async function uploadAndProcess(files, repoId){
+  openModal(pipeModalHTML());
+  let ok = 0, fail = 0;
+  for (let i = 0; i < files.length; i++){
+    const f = files[i];
+    $('#pipe-file').textContent = f.name + ' — documento ' + (i+1) + ' de ' + files.length;
+    resetPipe();
+    try {
+      const rec = await API.createDoc(App.token, f, repoId);
+      const done = await analyzeCore(rec, f, pipelineUI());
+      done ? ok++ : fail++;
+    } catch(err){
+      const ui = pipelineUI();
+      ui.step('extract','error');
+      ui.detail('extract', err.message || 'Error de validación');
+      fail++; await sleep(600);
+    }
+  }
+  const pr = $('#pipe-result');
+  pr.classList.remove('hidden');
+  pr.innerHTML = '<div class="pr-t">Resultado del lote</div>' +
+    '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
+    '<span class="chip-estado st-procesado">PROCESADOS: ' + ok + '</span>' +
+    (fail ? '<span class="chip-estado st-error">FALLIDOS: ' + fail + '</span>' : '') + '</div>' +
+    '<div class="pipe-foot"><button class="btn btn-ghost" id="pr-close">Cerrar</button>' +
+    '<button class="btn" id="pr-go">Ver documentos</button></div>';
+  $('#pr-close').onclick = closeModal;
+  $('#pr-go').onclick = () => { closeModal(); nav('docs'); };
+  refreshEngine(); await updateNavBadges();
+  toast(ok + ' documento(s) procesado(s)' + (fail ? ', ' + fail + ' con error' : '') + '.', fail ? 'error' : 'ok');
+  rerenderCurrent();
+}
+async function openUploadModal(){
+  const repos = await API.listRepos(App.token);
+  openModal('<div class="up-form"><h3>Cargar documentos</h3>' +
+    '<div class="sub mono" style="font:500 11px var(--mono);color:var(--ink2);margin-bottom:6px">PDF · DOCX · TXT — MÁX. 10 MB POR ARCHIVO</div>' +
+    '<div class="dropzone" id="dz"><i data-lucide="upload"></i>' +
+    '<p>Arrastre archivos aquí o haga clic para explorar</p>' +
+    '<small>El pipeline de IA se ejecuta automáticamente tras la carga</small>' +
+    '<input type="file" id="dz-input" multiple accept=".pdf,.docx,.txt" hidden></div>' +
+    '<ul class="up-list" id="up-list"></ul>' +
+    '<div class="field-sel"><label>Repositorio destino</label><select id="up-repo">' +
+    repos.map(r => '<option value="' + r.id + '">' + esc(r.name) + '</option>').join('') + '</select></div>' +
+    '<div class="pipe-foot"><button class="btn btn-ghost" data-close>Cancelar</button>' +
+    '<button class="btn" id="up-go" disabled style="opacity:.45"><i data-lucide="sparkles"></i>Procesar con IA</button></div></div>');
+  $('#dialog').querySelector('[data-close]').onclick = closeModal;
+  const dz = $('#dz'), input = $('#dz-input');
+  let pending = [];
+  const renderList = () => {
+    $('#up-list').innerHTML = pending.map(f =>
+      '<li><span>' + esc(f.name) + '</span><span class="sz">' + fmtBytes(f.size) + '</span></li>').join('');
+    const go = $('#up-go');
+    go.disabled = !pending.length; go.style.opacity = pending.length ? 1 : .45;
+  };
+  dz.onclick = () => input.click();
+  input.onchange = () => { pending = [...pending, ...input.files]; input.value = ''; renderList(); };
+  dz.ondragover = e => { e.preventDefault(); dz.classList.add('over'); };
+  dz.ondragleave = () => dz.classList.remove('over');
+  dz.ondrop = e => { e.preventDefault(); dz.classList.remove('over'); pending = [...pending, ...e.dataTransfer.files]; renderList(); };
+  $('#up-go').onclick = () => uploadAndProcess(pending, $('#up-repo').value);
+  refreshIcons();
+}
+async function loadDemoCorpus(){
+  toast('Cargando corpus de demostración (12 documentos sintéticos)…');
+  const files = DEMO_DOCS.map(d => new File([d.text], d.name, {type:'text/plain'}));
+  await uploadAndProcess(files, 'general');
+}
+
+/* ============================================================
+   16 · GUÍA TÉCNICA (sustentación)
+============================================================ */
+function openGuide(){
+  openModal('<div class="guide"><h3>Cómo funciona la IA</h3>' +
+    '<div class="gs">PIPELINE DOCUMENTAL · JUSTIFICACIÓN TÉCNICA · MAPA DE SERVICIOS</div>' +
+    '<h4>Flujo real (requisito central)</h4><ol>' +
+    '<li><b>Archivo</b> → carga validada (formato, tamaño, repo).</li>' +
+    '<li><b>Extracción</b> → pdf.js (PDF), mammoth.js (DOCX), FileReader (TXT).</li>' +
+    '<li><b>Procesamiento</b> → tokenización + stopwords + stemming en español.</li>' +
+    '<li><b>Análisis</b> → Naive Bayes (clasificación), TF (resumen), patrones (entidades).</li>' +
+    '<li><b>Almacenamiento</b> → resultados persistidos en IndexedDB junto al archivo.</li>' +
+    '<li><b>Búsqueda/consulta</b> → índice TF-IDF + RAG extractivo con citas.</li></ol>' +
+    '<h4>Qué técnicas se usan y por qué</h4>' +
+    '<p><b>Naive Bayes</b>: interpretable y suficiente para 4 categorías con vocabulario de dominio; sin costo ni latencia externa. <b>Resumen extractivo TF</b>: oraciones reales del documento, verificables. <b>Entidades por patrones</b>: precisión alta en dominio formal colombiano (NIT, COP, cláusulas). <b>RAG extractivo con TF-IDF y expansión léxica</b>: cada afirmación cita su fuente — nada se inventa; funciona sin API keys. En producción: backend REST + PostgreSQL + embeddings/pgvector + LLM y OCR para escaneos.</p>' +
+    '<h4>Mapa de servicios (backend simulado en este archivo)</h4><table><tbody>' +
+    [['POST /auth/login','API.login'],['POST /auth/register','API.register'],['GET /users','API.listUsers'],
+     ['GET /docs','API.listDocs'],['POST /docs','API.createDoc'],['POST /docs/:id/analyze','analyzeCore'],
+     ['DELETE /docs/:id','API.deleteDoc'],['GET /repos · POST /repos','API.listRepos/createRepo'],
+     ['GET /search','Index.scoreQuery'],['POST /ask','askCore'],['GET /events','API.listEvents'],
+     ['GET /backup','API.backup']].map(r => '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>').join('') +
+    '</tbody></table>' +
+    '<div class="gnote">TODO SE EJECUTA 100% EN EL NAVEGADOR · ÍNDEXEDDB COMO ALMACÉN · CONTRASEÑAS CON SHA-256 + SALT · SIN SECRETOS PUBLICADOS</div>' +
+    '<div class="pipe-foot"><button class="btn" data-close>Entendido</button></div></div>');
+  $('#dialog').querySelector('[data-close]').onclick = closeModal;
+}
+
+/* ============================================================
+   17 · NAVEGACIÓN
+============================================================ */
+const ROUTES = {panel:'01 — Panel', docs:'02 — Documentos', repos:'03 — Repositorios',
+  chat:'04 — Asistente IA', log:'05 — Registro', users:'06 — Usuarios', detail:'02 — Documento'};
+function nav(route, params = {}){
+  App.route = route;
+  if (route === 'detail'){ App.detailId = params.id; App.hl = params.hl || []; }
+  $$('#side-nav button').forEach(b => b.classList.toggle('on', b.dataset.route === route));
+  $('#crumb').textContent = 'Sección ' + ROUTES[route];
+  rerenderCurrent();
+}
+function rerenderCurrent(){
+  const v = {panel:renderPanel, docs:renderDocs, repos:renderRepos, chat:renderChat, log:renderLog, users:renderUsers, detail:renderDetail};
+  (v[App.route] || renderPanel)();
+}
+async function refreshEngine(){
+  const s = Index.stats();
+  $('#engine-st').innerHTML = 'Índice: <b style="color:var(--paper)">' + s.docs + ' docs · ' + s.vocab + ' términos</b>';
+}
+async function updateNavBadges(){
+  try {
+    const docs = await DB.all('docs');
+    $('#nav-docs').textContent = docs.length || '';
+    const errs = (await DB.all('events')).filter(e => e.level === 'ERROR').length;
+    const b = $('#nav-err');
+    b.textContent = errs || '';
+    b.style.background = errs ? 'var(--red)' : 'var(--accent)';
+  } catch(e){}
+}
+async function loadRepoMap(){
+  const repos = await DB.all('repos');
+  App.repoMap = Object.fromEntries(repos.map(r => [r.id, r.name]));
+}
+
+/* ============================================================
+   18 · VISTA: PANEL
+============================================================ */
+function donutSVG(items){
+  const total = items.reduce((a,b) => a + b.value, 0);
+  if (!total) return '';
+  const R = 52, C = 2*Math.PI*R; let off = 0;
+  const segs = items.map(it => {
+    const len = C*it.value/total;
+    const s = '<circle r="' + R + '" cx="70" cy="70" fill="none" stroke="' + it.color + '" stroke-width="17" stroke-dasharray="' + len + ' ' + (C-len) + '" stroke-dashoffset="' + (-off) + '" transform="rotate(-90 70 70)"/>';
+    off += len; return s;
+  }).join('');
+  return '<svg viewBox="0 0 140 140" class="donut">' + segs +
+    '<text x="70" y="67" text-anchor="middle" class="dn">' + total + '</text>' +
+    '<text x="70" y="86" text-anchor="middle" class="dc">DOCS</text></svg>';
+}
+async function renderPanel(){
+  const docs = await DB.all('docs');
+  const processed = docs.filter(d => d.status === 'procesado');
+  const evs = (await DB.all('events')).sort((a,b) => b.ts - a.ts);
+  const words = processed.reduce((a,d) => a + (d.wordCount||0), 0);
+  const ents = processed.reduce((a,d) => a + Object.values(d.entities||{}).reduce((x,y) => x+y.length, 0), 0);
+  const errors = docs.filter(d => d.status === 'error').length + evs.filter(e => e.level === 'ERROR').length;
+  const catCounts = Object.keys(CAT_COLORS).map(c => ({label:c, value:processed.filter(d => d.category === c).length, color:CAT_COLORS[c]}));
+  const fmtCounts = EXT_OK.map(e => ({ext:e.toUpperCase(), value:docs.filter(d => d.ext === e).length}));
+  const maxFmt = Math.max(...fmtCounts.map(f => f.value), 1);
+  const totalCat = processed.length;
+
+  if (!docs.length){
+    $('#view-inner').innerHTML =
+      '<div class="sec-head"><div class="num">SECCIÓN 01</div><h2>Panel del repositorio</h2>' +
+      '<p>Indicadores del estado documental y de la inteligencia generada. El repositorio está vacío: cargue sus archivos o el corpus de demostración.</p></div>' +
+      '<div class="empty"><h3>El archivo está en blanco.</h3>' +
+      '<p>Cargue documentos PDF, DOCX o TXT, o utilice el corpus de demostración con 12 documentos sintéticos (facturas, contratos, cartas e informes) que atraviesan el mismo pipeline de IA.</p>' +
+      '<div class="acts"><button class="btn" id="em-upload"><i data-lucide="upload"></i>Cargar documentos</button>' +
+      '<button class="btn btn-ghost" id="em-demo"><i data-lucide="sparkles"></i>Cargar corpus de demostración</button></div></div>';
+    $('#em-upload').onclick = openUploadModal;
+    $('#em-demo').onclick = loadDemoCorpus;
+    refreshIcons(); return;
+  }
+
+  const days = [...Array(14)].map((_,i) => {
+    const d = new Date(); d.setDate(d.getDate() - (13-i)); d.setHours(0,0,0,0);
+    const next = d.getTime() + 864e5;
+    return {label:d.getDate(), count:evs.filter(e => e.ts >= d.getTime() && e.ts < next).length};
+  });
+  const maxDay = Math.max(...days.map(d => d.count), 1);
+
+  $('#view-inner').innerHTML =
+    '<div class="sec-head"><div class="num">SECCIÓN 01</div><h2>Panel del repositorio</h2>' +
+    '<p>Indicadores consolidados del estado documental y de la inteligencia generada por el motor NLP.</p></div>' +
+    '<div class="kpis">' +
+    '<div class="kpi"><div class="v">' + docs.length + '</div><div class="l">Documentos</div></div>' +
+    '<div class="kpi"><div class="v">' + processed.length + '</div><div class="l">Procesados por IA</div></div>' +
+    '<div class="kpi"><div class="v">' + (words/1000).toFixed(1) + '<small> mil</small></div><div class="l">Palabras indexadas</div></div>' +
+    '<div class="kpi"><div class="v">' + ents + '</div><div class="l">Entidades extraídas</div></div>' +
+    '<div class="kpi' + (errors ? ' warn' : '') + '"><div class="v">' + errors + '</div><div class="l">Errores registrados</div></div></div>' +
+    '<div class="dash-grid"><div>' +
+    '<div class="panel" style="margin-bottom:26px"><div class="panel-h"><h3>Distribución por categoría (IA)</h3><span class="mono" style="font:500 9.5px var(--mono);color:var(--ink2)">NAIVE BAYES</span></div>' +
+    '<div class="panel-b donut-wrap">' + donutSVG(catCounts) +
+    '<div class="legend">' + catCounts.map(c => '<div class="lg-row"><span class="lg-dot" style="background:' + c.color + '"></span>' + c.label +
+    '<span class="lg-val">' + c.value + ' · ' + (totalCat ? Math.round(c.value/totalCat*100) : 0) + '%</span></div>').join('') + '</div></div></div>' +
+    '<div class="panel"><div class="panel-h"><h3>Formatos soportados</h3></div><div class="panel-b">' +
+    fmtCounts.map(f => '<div class="fmt-row"><span class="ext">' + f.ext + '</span>' +
+    '<div class="fmt-track"><div class="fmt-fill" style="width:' + (f.value/maxFmt*100) + '%"></div></div>' +
+    '<span class="fmt-val">' + f.value + '</span></div>').join('') + '</div></div></div>' +
+    '<div><div class="panel" style="margin-bottom:26px"><div class="panel-h"><h3>Actividad · 14 días</h3></div>' +
+    '<div class="panel-b"><div class="spark">' + days.map((d,i) =>
+      '<div class="bar' + (i===13 ? ' today' : '') + '" style="height:' + Math.max(4, d.count/maxDay*52) + 'px" title="' + d.count + ' eventos"></div>').join('') +
+    '</div><div class="mono" style="display:flex;justify-content:space-between;font:500 9px var(--mono);color:var(--ink2);margin-top:6px"><span>· 14 DÍAS</span><span>HOY ·</span></div></div></div>' +
+    '<div class="panel"><div class="panel-h"><h3>Últimos eventos</h3><button class="linklike" id="go-log" style="margin:0;font-size:11px">ver registro</button></div>' +
+    '<div class="panel-b"><ul class="tl">' + (evs.slice(0,8).map(e =>
+      '<li><span class="td tl-' + e.level + '"></span><div><span class="tc">' + e.level + ' · ' + esc(e.comp) + '</span>' +
+      '<div>' + esc(e.msg).slice(0,80) + (e.msg.length > 80 ? '…' : '') + '</div></div>' +
+      '<span class="tt">' + fmtTime(e.ts) + '</span></li>').join('') || '<li class="empty-mini">Sin eventos aún.</li>') + '</ul></div></div></div></div>' +
+    '<div class="sec-head" style="margin:36px 0 14px"><div class="num">RECIENTES</div><h2 style="font-size:22px">Documentos recientes</h2></div>' +
+    '<div class="panel"><table class="dt"><tbody>' +
+    docs.slice(0,6).map(d => '<tr class="doc-row" data-id="' + d.id + '">' +
+      '<td><div class="doc-name"><i data-lucide="file-text"></i>' + esc(d.name) + '</div></td>' +
+      '<td>' + (d.category ? '<span class="seal-cat" style="color:' + (CAT_COLORS[d.category]||'var(--ink2)') + '">' + d.category + '</span>' :
+        '<span class="chip-estado st-' + d.status + '">' + estadoLabel(d.status) + '</span>') + '</td>' +
+      '<td class="mono" style="font:500 11px var(--mono);color:var(--ink2)">' + fmtTime(d.uploadedAt) + '</td></tr>').join('') +
+    '</tbody></table></div>';
+  $('#go-log').onclick = () => nav('log');
+  $$('#view-inner tr.doc-row').forEach(r => r.onclick = () => nav('detail', {id:r.dataset.id}));
+  refreshIcons();
+}
+
+/* ============================================================
+   19 · VISTA: DOCUMENTOS
+============================================================ */
+async function renderDocs(){
+  const docs = (await DB.all('docs')).sort((a,b) => b.uploadedAt - a.uploadedAt);
+  const repos = await DB.all('repos');
+  const f = App.filters;
+  $('#view-inner').innerHTML =
+    '<div class="sec-head sec-head-row"><div><div class="num">SECCIÓN 02</div><h2>Documentos</h2>' +
+    '<p>' + docs.length + ' archivo(s). La búsqueda consulta el nombre y el contenido indexado (TF-IDF) con fragmentos resaltados.</p></div>' +
+    '<div style="display:flex;gap:10px">' + (!docs.length ? '<button class="btn btn-ghost" id="hd-demo"><i data-lucide="sparkles"></i>Corpus demo</button>' : '') +
+    '<button class="btn" id="hd-up"><i data-lucide="upload"></i>Cargar</button></div></div>' +
+    '<div class="filters">' +
+    '<div class="search-box"><i data-lucide="search"></i><input id="dq" placeholder="Buscar por nombre o dentro del contenido…" value="' + esc(f.q) + '"></div>' +
+    '<select id="f-cat"><option value="">Toda categoría</option>' + Object.keys(CAT_COLORS).map(c => '<option' + (f.cat===c?' selected':'') + '>' + c + '</option>').join('') + '</select>' +
+    '<select id="f-fmt"><option value="">Todo formato</option>' + EXT_OK.map(e => '<option value="' + e + '"' + (f.fmt===e?' selected':'') + '>' + e.toUpperCase() + '</option>').join('') + '</select>' +
+    '<select id="f-repo"><option value="">Todo repositorio</option>' + repos.map(r => '<option value="' + r.id + '"' + (f.repo===r.id?' selected':'') + '>' + esc(r.name) + '</option>').join('') + '</select>' +
+    '<select id="f-sort"><option value="recent">Más recientes</option><option value="name"' + (f.sort==='name'?' selected':'') + '>Nombre A-Z</option><option value="words"' + (f.sort==='words'?' selected':'') + '>Más palabras</option></select></div>' +
+    '<div id="doc-table"></div>';
+  $('#hd-up').onclick = openUploadModal;
+  const dmb = $('#hd-demo'); if (dmb) dmb.onclick = loadDemoCorpus;
+  const upd = () => { f.q = $('#dq').value; f.cat = $('#f-cat').value; f.fmt = $('#f-fmt').value;
+    f.repo = $('#f-repo').value; f.sort = $('#f-sort').value; renderDocsTable(docs); };
+  ['dq','f-cat','f-fmt','f-repo','f-sort'].forEach(id => $(id).addEventListener(id === 'dq' ? 'input' : 'change', upd));
+  renderDocsTable(docs);
+  refreshIcons();
+}
+function renderDocsTable(docs){
+  const f = App.filters;
+  const scores = f.q.trim().length >= 3 ? Object.fromEntries(Index.scoreQuery(f.q).map(r => [r.id, r.score])) : {};
+  const ql = f.q.trim().toLowerCase();
+  let list = docs.filter(d =>
+    (!f.cat || d.category === f.cat) && (!f.fmt || d.ext === f.fmt) && (!f.repo || d.repoId === f.repo) &&
+    (!ql || d.name.toLowerCase().includes(ql) || scores[d.id]));
+  if (f.sort === 'name') list = [...list].sort((a,b) => a.name.localeCompare(b.name));
+  if (f.sort === 'words') list = [...list].sort((a,b) => (b.wordCount||0) - (a.wordCount||0));
+  const box = $('#doc-table');
+  if (!list.length){
+    box.innerHTML = '<div class="empty"><h3>' + (docs.length ? 'Sin coincidencias.' : 'El repositorio está vacío.') + '</h3>' +
+      '<p>' + (docs.length ? 'Ningún documento coincide con la búsqueda o los filtros aplicados.' : 'Cargue documentos o el corpus de demostración para comenzar.') + '</p>' +
+      '<div class="acts">' + (docs.length ?
+        '<button class="btn btn-ghost" id="cl-f">Limpiar filtros</button>' :
+        '<button class="btn" id="em-up2">Cargar documentos</button><button class="btn btn-ghost" id="em-dm2">Corpus demo</button>') + '</div></div>';
+    const cl = $('#cl-f'); if (cl) cl.onclick = () => { App.filters = {q:'',cat:'',fmt:'',repo:'',sort:'recent'}; renderDocs(); };
+    const up = $('#em-up2'); if (up) up.onclick = openUploadModal;
+    const dm = $('#em-dm2'); if (dm) dm.onclick = loadDemoCorpus;
+    return;
+  }
+  const canDel = d => App.user.role === 'admin' || d.ownerId === App.user.id;
+  box.innerHTML = '<div class="panel"><table class="dt"><thead><tr><th>Documento</th><th>Repositorio</th><th>Categoría IA</th><th>Estado</th><th>Palabras</th><th>Cargado</th><th></th></tr></thead><tbody>' +
+    list.map(d => {
+      const snip = scores[d.id] ? (Index.bestSnippets(d.id, f.q, 1)[0] || null) : null;
+      return '<tr class="doc-row" data-id="' + d.id + '">' +
+      '<td><div class="doc-name"><i data-lucide="file-text"></i>' + esc(d.name) + '</div>' +
+      '<div class="doc-meta">' + d.ext.toUpperCase() + ' · ' + fmtBytes(d.size) + (d.ownerName ? ' · ' + esc(d.ownerName) : '') + '</div></td>' +
+      '<td style="font:500 12px var(--mono);color:var(--ink2)">' + esc(App.repoMap[d.repoId] || 'General') + '</td>' +
+      '<td>' + (d.category ? '<span class="seal-cat" style="color:' + (CAT_COLORS[d.category]||'var(--ink2)') + '">' + d.category + '</span>' : '—') + '</td>' +
+      '<td><span class="chip-estado st-' + d.status + '">' + estadoLabel(d.status) + '</span></td>' +
+      '<td class="mono" style="font:500 12px var(--mono)">' + (d.wordCount ? d.wordCount.toLocaleString('es-CO') : '—') + '</td>' +
+      '<td class="mono" style="font:500 10.5px var(--mono);color:var(--ink2)">' + fmtTime(d.uploadedAt) + '</td>' +
+      '<td><div class="row-actions">' +
+      '<button class="iconbtn" data-act="dl" data-id="' + d.id + '" title="Descargar"><i data-lucide="download"></i></button>' +
+      (canDel(d) ? '<button class="iconbtn del" data-act="del" data-id="' + d.id + '" title="Eliminar"><i data-lucide="trash-2"></i></button>' : '') +
+      '</div></td></tr>' +
+      (snip ? '<tr class="snippet-row"><td colspan="7">' + highlight(snip, Index.highlightTerms(f.q)) +
+      ' <span class="cite mono">← coincidencia en contenido</span></td></tr>' : '');
+    }).join('') + '</tbody></table></div>' +
+    (list.length > 60 ? '<p class="mono" style="font:500 10px var(--mono);color:var(--ink2);margin-top:10px">MOSTRANDO 60 DE ' + list.length + '</p>' : '');
+  $$('#doc-table tr.doc-row').forEach(r => r.onclick = () => nav('detail', {id:r.dataset.id}));
+  $$('#doc-table [data-act="dl"]').forEach(b => b.onclick = async e => { e.stopPropagation(); downloadDoc(await DB.get('docs', b.dataset.id)); });
+  $$('#doc-table [data-act="del"]').forEach(b => b.onclick = async e => { e.stopPropagation(); deleteDoc(await DB.get('docs', b.dataset.id)); });
+  refreshIcons();
+}
+async function downloadDoc(d){
+  if (!d || !d.file) return toast('Archivo original no disponible.', 'error');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(d.file);
+  a.download = d.name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('Descarga iniciada: ' + d.name, 'ok');
+}
+async function deleteDoc(d){
+  if (!d) return;
+  const ok = await confirmDialog({title:'Eliminar documento', msg:'"' + d.name + '" y su análisis serán eliminados permanentemente. ¿Continuar?'});
+  if (!ok) return;
+  try {
+    await API.deleteDoc(App.token, d.id);
+    toast('Documento eliminado.', 'ok');
+    updateNavBadges();
+    if (App.route === 'detail') nav('docs'); else rerenderCurrent();
+  } catch(err){ toast(err.message, 'error'); }
+}
+
+/* ============================================================
+   20 · VISTA: DETALLE
+============================================================ */
+async function renderDetail(){
+  const d = await DB.get('docs', App.detailId);
+  if (!d){ toast('Documento no encontrado.', 'error'); return nav('docs'); }
+  const canDel = App.user.role === 'admin' || d.ownerId === App.user.id;
+  const canRep = App.user.role === 'admin' || d.ownerId === App.user.id;
+  const nEnt = Object.values(d.entities || {}).reduce((a,b) => a+b.length, 0);
+  const hlq = App.hl || [];
+  $('#view-inner').innerHTML =
+    '<button class="back-link" id="bk"><i data-lucide="arrow-left"></i>Volver a documentos</button>' +
+    '<div class="detail-head">' +
+    '<div class="num mono" style="font:600 10px var(--mono);letter-spacing:.18em;color:var(--accent)">' + d.ext.toUpperCase() + ' · ' + fmtBytes(d.size) + ' · CARGADO ' + fmtTime(d.uploadedAt).toUpperCase() + '</div>' +
+    '<h2>' + esc(d.name) + '</h2>' +
+    '<div class="detail-meta">' +
+    (d.category ? '<span class="seal-cat" style="color:' + CAT_COLORS[d.category] + ';font-size:11px">' + d.category + '</span>' : '') +
+    '<span class="chip-estado st-' + d.status + '">' + estadoLabel(d.status) + '</span>' +
+    '<span class="m">REPO: ' + esc(App.repoMap[d.repoId] || 'General').toUpperCase() + '</span>' +
+    (d.ownerName ? '<span class="m">PROPIETARIO: ' + esc(d.ownerName).toUpperCase() + '</span>' : '') +
+    (d.pages ? '<span class="m">' + d.pages + ' PÁGINAS</span>' : '') +
+    (d.wordCount ? '<span class="m">' + d.wordCount.toLocaleString('es-CO') + ' PALABRAS</span>' : '') +
+    (nEnt ? '<span class="m">' + nEnt + ' ENTIDADES</span>' : '') + '</div>' +
+    '<div class="detail-acts">' +
+    '<button class="btn small" id="dt-dl"><i data-lucide="download"></i>Descargar original</button>' +
+    (canRep ? '<button class="btn btn-ghost small" id="dt-rp"><i data-lucide="refresh-cw"></i>Reprocesar con IA</button>' : '') +
+    '<button class="btn btn-ghost small" id="dt-ask"><i data-lucide="message-square"></i>Preguntar sobre este documento</button>' +
+    (canDel ? '<button class="btn btn-danger small" id="dt-del"><i data-lucide="trash-2"></i>Eliminar</button>' : '') +
+    '</div></div>' +
+    (d.status === 'error' ? '<div class="panel" style="margin-bottom:24px"><div class="err-note">ERROR DE PROCESAMIENTO — ' + esc(d.error) + ' · Consulte el Registro (sección 05) para más detalles.</div></div>' : '') +
+    (d.status === 'procesado' ? '<div class="detail-grid"><div>' +
+    '<div class="panel probs d-sec"><div class="panel-h"><h3>Clasificación automática</h3><span class="mono" style="font:500 9.5px var(--mono);color:var(--ink2)">NAIVE BAYES</span></div>' +
+    (d.categoryProbs || []).map(p => '<div class="pb-row"><div class="pb-top"><span>' + p.cat + '</span><span class="pct">' + (p.p*100).toFixed(1) + '%</span></div>' +
+    '<div class="pb-track"><div class="pb-fill" style="width:' + (p.p*100) + '%;background:' + (CAT_COLORS[p.cat]||'var(--ink2)') + '"></div></div></div>').join('') + '</div>' +
+    '<div class="panel d-sec"><div class="panel-h"><h3>Resumen IA</h3><span class="mono" style="font:500 9.5px var(--mono);color:var(--ink2)">EXTRACTIVO · TF</span></div>' +
+    '<div class="panel-b" style="padding-top:10px"><ol class="sum-list">' +
+    (d.summary || []).map(s => '<li>' + esc(s) + '</li>').join('') + '</ol></div></div>' +
+    '<div class="panel d-sec"><div class="panel-h"><h3>Información extraída</h3><span class="mono" style="font:500 9.5px var(--mono);color:var(--ink2)">' + nEnt + ' ENTIDADES</span></div>' +
+    (Object.entries(ENT_LABELS).map(([k,lbl]) => {
+      const arr = (d.entities || {})[k] || [];
+      return arr.length ? '<div class="ent-group"><div class="eg-t">' + lbl + ' · ' + arr.length + '</div><div class="ent-chips">' +
+        arr.map(v => '<span class="ent">' + esc(v) + '</span>').join('') +
+        (arr.length >= 12 ? '<span class="ent" style="color:var(--ink2)">…y más</span>' : '') + '</div></div>' : '';
+    }).join('') || '<div class="empty-mini">No se detectaron entidades.</div>') + '</div>' +
+    '</div><div class="panel"><div class="hl-search"><i data-lucide="search" style="width:14px;height:14px;color:var(--ink2)"></i>' +
+    '<input id="dt-q" placeholder="Resaltar términos dentro del documento…"><span class="hl-count" id="dt-count"></span></div>' +
+    '<div class="doc-text" id="dt-text"></div></div></div>' : '');
+  $('#bk').onclick = () => nav('docs');
+  $('#dt-dl').onclick = () => downloadDoc(d);
+  $('#dt-ask').onclick = () => { App.pendingQuestion = 'Sobre "' + d.name + '": '; nav('chat'); };
+  const rp = $('#dt-rp'); if (rp) rp.onclick = async () => {
+    openModal(pipeModalHTML());
+    $('#pipe-file').textContent = d.name + ' — reprocesamiento';
+    resetPipe();
+    const done = await analyzeCore(d, d.file, pipelineUI());
+    closeModal();
+    toast(done ? 'Documento reprocesado correctamente.' : 'Error al reprocesar — revise el registro.', done ? 'ok' : 'error');
+    refreshEngine(); updateNavBadges(); rerenderCurrent();
+  };
+  const del = $('#dt-del'); if (del) del.onclick = () => deleteDoc(d);
+  const txtEl = $('#dt-text');
+  if (txtEl){
+    const paint = terms => {
+      txtEl.innerHTML = highlight(d.text || '', terms);
+      const n = txtEl.querySelectorAll('mark').length;
+      $('#dt-count').textContent = n ? n + ' coincidencia(s)' : '';
+    };
+    paint(hlq);
+    $('#dt-q').addEventListener('input', e => paint(Index.highlightTerms(e.target.value)));
+    App.hl = [];
+  }
+  refreshIcons();
+}
+
+/* ============================================================
+   21 · VISTA: REPOSITORIOS
+============================================================ */
+async function renderRepos(){
+  const repos = (await DB.all('repos')).sort((a,b) => a.name.localeCompare(b.name));
+  const docs = await DB.all('docs');
+  $('#view-inner').innerHTML =
+    '<div class="sec-head sec-head-row"><div><div class="num">SECCIÓN 03</div><h2>Repositorios</h2>' +
+    '<p>Organice los documentos en carpetas temáticas. "General" es el repositorio por defecto y no puede eliminarse.</p></div>' +
+    '<button class="btn" id="rp-new"><i data-lucide="folder-plus"></i>Nuevo repositorio</button></div>' +
+    '<div class="panel"><table class="dt"><thead><tr><th>Repositorio</th><th>Documentos</th><th>Peso total</th><th>Procesados</th><th>Creado</th><th></th></tr></thead><tbody>' +
+    repos.map(r => {
+      const rd = docs.filter(d => d.repoId === r.id);
+      const pr = rd.filter(d => d.status === 'procesado').length;
+      return '<tr><td><div class="doc-name"><i data-lucide="folder"></i>' + esc(r.name) + '</div>' +
+      '<div class="doc-meta">' + esc(r.desc || '—') + '</div></td>' +
+      '<td class="mono" style="font:600 13px var(--mono)">' + rd.length + '</td>' +
+      '<td class="mono" style="font:500 12px var(--mono);color:var(--ink2)">' + fmtBytes(rd.reduce((a,d) => a+(d.size||0), 0)) + '</td>' +
+      '<td><span class="chip-estado' + (rd.length && pr === rd.length ? ' st-procesado' : '') + '">' + pr + '/' + rd.length + '</span></td>' +
+      '<td class="mono" style="font:500 10.5px var(--mono);color:var(--ink2)">' + fmtTime(r.created) + '</td>' +
+      '<td><div class="row-actions"><button class="iconbtn" data-go="' + r.id + '" title="Ver documentos"><i data-lucide="eye"></i></button>' +
+      (r.id !== 'general' ? '<button class="iconbtn del" data-del="' + r.id + '" title="Eliminar"><i data-lucide="trash-2"></i></button>' : '') +
+      '</div></td></tr>';
+    }).join('') + '</tbody></table></div>';
+  $('#rp-new').onclick = () => {
+    openModal('<div class="confirm"><h3>Nuevo repositorio</h3>' +
+      '<div class="field" style="margin:16px 0"><label>Nombre</label><input id="nr-name" placeholder="Contratos 2024"></div>' +
+      '<div class="field" style="margin:0 0 22px"><label>Descripción (opcional)</label><input id="nr-desc" placeholder="Documentación contractual vigente"></div>' +
+      '<footer><button class="btn btn-ghost" data-close>Cancelar</button><button class="btn" id="nr-ok">Crear</button></footer></div>');
+    $('#dialog').querySelector('[data-close]').onclick = closeModal;
+    $('#nr-ok').onclick = async () => {
+      try {
+        await API.createRepo(App.token, $('#nr-name').value, $('#nr-desc').value);
+        closeModal(); toast('Repositorio creado.', 'ok');
+        await loadRepoMap(); renderRepos();
+      } catch(err){ toast(err.message, 'error'); }
+    };
+  };
+  $$('#view-inner [data-del]').forEach(b => b.onclick = async () => {
+    const r = repos.find(x => x.id === b.dataset.del);
+    const ok = await confirmDialog({title:'Eliminar repositorio', msg:'Los documentos de "' + r.name + '" se moverán a "General". ¿Continuar?'});
+    if (!ok) return;
+    try {
+      await API.deleteRepo(App.token, r.id);
+      toast('Repositorio eliminado.', 'ok');
+      await loadRepoMap(); renderRepos();
+    } catch(err){ toast(err.message, 'error'); }
+  });
+  $$('#view-inner [data-go]').forEach(b => b.onclick = () => { App.filters.repo = b.dataset.go; nav('docs'); });
+  refreshIcons();
+}
+
+/* ============================================================
+   22 · VISTA: ASISTENTE (RAG extractivo)
+============================================================ */
+function msgHTML(m, i){
+  if (m.role === 'user') return '<div class="msg user"><div class="msg-body">' + esc(m.text) + '</div></div>';
+  if (m.type === 'none') return '<div class="msg ai"><div class="msg-head">ASISTENTE</div>' +
+    '<div class="msg-body">No encontré información suficiente en el repositorio para responder <b>“' + esc(m.q) + '”</b>.<br><br>' +
+    'Pruebe con otros términos, verifique que los documentos estén <b>procesados</b> o cargue más contenido al repositorio.</div></div>';
+  const cl = (m.conf ?? 0) >= .55 ? 'alta' : (m.conf ?? 0) >= .3 ? 'media' : 'baja';
+  return '<div class="msg ai"><div class="msg-head">ASISTENTE · <span class="conf conf-' + cl + '">CONFIANZA ' + cl.toUpperCase() + '</span></div>' +
+    '<div class="msg-body">' + m.html + '</div>' +
+    (m.sources && m.sources.length ? '<div class="msg-sources"><div class="ms-t">Fuentes (' + m.sources.length + ') — clic para abrir resaltado</div>' +
+    m.sources.map((s,j) => '<button class="src-btn" data-msg="' + i + '" data-id="' + s.id + '">' + (j+1) + '. ' + esc(s.name) +
+    ' <span class="sc">· ' + Math.round(Math.min(1, s.score*2.2)*100) + '%</span></button>').join('') + '</div>' : '') + '</div>';
+}
+async function persistChat(){
+  if (App.user) await DB.put('kv', {id:'chat:' + App.user.id, msgs:App.chat.slice(-60)});
+}
+async function renderChat(){
+  const stats = Index.stats();
+  const processed = (await DB.all('docs')).filter(d => d.status === 'procesado');
+  const cats = new Set(processed.map(d => d.category));
+  const sugs = [];
+  if (cats.has('Factura')) sugs.push('¿Cuál es el valor total de las facturas?');
+  if (cats.has('Contrato')) sugs.push('¿Qué plazos y vigencias tienen los contratos?');
+  if (cats.has('Correspondencia')) sugs.push('¿Qué comunicados hay y sobre qué asuntos?');
+  if (cats.has('Informe')) sugs.push('¿Cuáles son las conclusiones de los informes?');
+  if (processed.length) sugs.push('¿Quiénes son las partes contratantes?');
+  const pre = App.pendingQuestion; App.pendingQuestion = '';
+  $('#view-inner').innerHTML =
+    '<div class="sec-head"><div class="num">SECCIÓN 04</div><h2>Asistente de consulta</h2>' +
+    '<p>Consulte el repositorio en lenguaje natural. La respuesta se compone con fragmentos recuperados por similitud TF-IDF y cita los documentos fuente.</p></div>' +
+    '<div class="chat-grid"><div class="chat"><div class="chat-scroll" id="chat-scroll">' +
+    (App.chat.length ? App.chat.map(msgHTML).join('') :
+    '<div class="chat-hero"><div class="ch-t">Pregunte a su repositorio.</div>' +
+    '<div class="ch-s">' + (processed.length ? 'El índice contiene ' + processed.length + ' documento(s) procesados. Formule una pregunta sobre su contenido.' : 'Aún no hay documentos procesados. Cargue archivos o el corpus de demostración para consultar.') + '</div>' +
+    '<div class="chat-suggest">' + sugs.map(s => '<button class="sug" data-q="' + esc(s) + '"><i data-lucide="corner-down-right"></i>' + esc(s) + '</button>').join('') + '</div></div>') +
+    '</div><div class="chat-input">' +
+    '<input id="chat-q" placeholder="Ej.: ¿cuál es el valor total de las facturas?" value="' + esc(pre) + '">' +
+    '<button id="chat-send" title="Enviar"><i data-lucide="send"></i></button></div></div>' +
+    '<aside class="chat-side"><div class="panel"><div class="panel-b">' +
+    '<h4>Pipeline de consulta</h4><ol>' +
+    '<li>Interpretación de la pregunta (intención)</li><li>Expansión léxica (sinónimos + stemming)</li>' +
+    '<li>Recuperación TF-IDF de docs y fragmentos</li><li>Composición de respuesta con citas [n]</li></ol>' +
+    '<h4>Justificación técnica</h4><p><b>RAG extractivo</b> en cliente: la respuesta se arma con oraciones reales de los documentos (nada se inventa), recuperadas con un índice invertido TF-IDF. Sin costos ni API keys, y cada afirmación es trazable a su fuente. En producción migraría a embeddings + base vectorial + LLM en backend.</p>' +
+    '<h4>Índice en vivo</h4><div class="idx-stats">' +
+    '<div class="ist"><div class="v">' + stats.docs + '</div><div class="l">Docs</div></div>' +
+    '<div class="ist"><div class="v">' + stats.fragments + '</div><div class="l">Fragmentos</div></div>' +
+    '<div class="ist"><div class="v">' + stats.vocab + '</div><div class="l">Vocab</div></div></div>' +
+    '<div class="gnote">MODELOS: NAIVE BAYES (CLASIFICACIÓN) · TF (RESUMEN) · REGEX+HEURÍSTICA (ENTIDADES) · TF-IDF+RAG (CONSULTA)</div>' +
+    '</div></div></aside></div>';
+  $$('.sug').forEach(b => b.onclick = () => sendQuestion(b.dataset.q));
+  $('#chat-send').onclick = () => sendQuestion($('#chat-q').value);
+  $('#chat-q').addEventListener('keydown', e => { if (e.key === 'Enter') sendQuestion(e.target.value); });
+  $$('#chat-scroll .src-btn').forEach(btn => {
+    btn.onclick = () => {
+      const m = App.chat[+btn.dataset.msg];
+      nav('detail', {id:btn.dataset.id, hl:(m && m.terms) || []});
+    };
+  });
+  const sc = $('#chat-scroll'); sc.scrollTop = sc.scrollHeight;
+  if (pre) $('#chat-q').focus();
+  refreshIcons();
+}
+async function sendQuestion(q){
+  q = (q || '').trim();
+  if (!q) return;
+  App.chat.push({role:'user', text:q, ts:Date.now()});
+  renderChat();
+  const sc = $('#chat-scroll');
+  const t = document.createElement('div');
+  t.className = 'msg ai';
+  t.innerHTML = '<div class="typing"><i></i><i></i><i></i></div>';
+  sc.appendChild(t); sc.scrollTop = sc.scrollHeight;
+  await sleep(600 + Math.random()*400);
+  const ans = await askCore(q);
+  App.chat.push({role:'ai', ...ans, ts:Date.now()});
+  await persistChat();
+  renderChat();
+}
+
+/* ============================================================
+   23 · VISTA: REGISTRO
+============================================================ */
+async function renderLog(){
+  const evs = await API.listEvents(App.token);
+  const filt = App.__logFilter || '';
+  const list = filt ? evs.filter(e => e.level === filt) : evs;
+  $('#view-inner').innerHTML =
+    '<div class="sec-head sec-head-row"><div><div class="num">SECCIÓN 05</div><h2>Registro de eventos</h2>' +
+    '<p>Bitácora del sistema: autenticación, validaciones, pipeline de IA, errores y acciones sobre documentos. ' +
+    (App.user.role === 'admin' ? 'Como administrador ve todos los eventos.' : 'Como analista ve únicamente sus eventos.') + '</p></div>' +
+    '<div style="display:flex;gap:10px;align-items:center">' +
+    '<select id="lv-f"><option value="">Todos los niveles</option>' + ['INFO','WARN','ERROR'].map(l => '<option' + (filt===l?' selected':'') + '>' + l + '</option>').join('') + '</select>' +
+    (App.user.role === 'admin' ? '<button class="btn btn-danger small" id="lg-cl"><i data-lucide="trash-2"></i>Limpiar registro</button>' : '') +
+    '</div></div>' +
+    '<div class="panel"><table class="dt"><thead><tr><th>Hora</th><th>Nivel</th><th>Componente</th><th>Mensaje</th><th>Usuario</th></tr></thead><tbody>' +
+    (list.slice(0,150).map(e => '<tr>' +
+    '<td class="mono" style="font:500 10.5px var(--mono);color:var(--ink2);white-space:nowrap">' + fmtTime(e.ts) + '</td>' +
+    '<td><span class="lv lv-' + e.level + '">' + e.level + '</span></td>' +
+    '<td class="mono" style="font:600 11px var(--mono)">' + esc(e.comp) + '</td>' +
+    '<td style="font-size:13px">' + esc(e.msg) + '</td>' +
+    '<td class="mono" style="font:500 10.5px var(--mono);color:var(--ink2)">' + esc(e.user) + '</td></tr>').join('') ||
+    '<tr><td colspan="5" class="empty-mini">No hay eventos con este filtro.</td></tr>') +
+    '</tbody></table></div>' +
+    (list.length > 150 ? '<p class="mono" style="font:500 10px var(--mono);color:var(--ink2);margin-top:12px">MOSTRANDO LOS 150 EVENTOS MÁS RECIENTES…</p>' : '');
+  $('#lv-f').onchange = e => { App.__logFilter = e.target.value; renderLog(); };
+  const cl = $('#lg-cl'); if (cl) cl.onclick = async () => {
+    const ok = await confirmDialog({title:'Limpiar registro', msg:'Se eliminarán todos los eventos del sistema. ¿Continuar?'});
+    if (!ok) return;
+    try { await API.clearEvents(App.token); toast('Registro limpiado.', 'ok'); updateNavBadges(); renderLog(); }
+    catch(err){ toast(err.message, 'error'); }
+  };
+  refreshIcons();
+}
+
+/* ============================================================
+   24 · VISTA: USUARIOS (admin) + respaldo
+============================================================ */
+async function renderUsers(){
+  let users;
+  try { users = await API.listUsers(App.token); }
+  catch(err){ $('#view-inner').innerHTML = '<div class="empty"><h3>Acceso restringido</h3><p>' + esc(err.message) + '</p></div>'; return; }
+  $('#view-inner').innerHTML =
+    '<div class="sec-head sec-head-row"><div><div class="num">SECCIÓN 06</div><h2>Usuarios y control de acceso</h2>' +
+    '<p>Gestión de cuentas: roles (admin/analista), eliminación de cuentas y exportación de respaldo. Los documentos de un usuario eliminado permanecen en el repositorio.</p></div>' +
+    '<button class="btn" id="us-bk"><i data-lucide="database"></i>Exportar respaldo (JSON)</button></div>' +
+    '<div class="panel"><table class="dt"><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Documentos</th><th>Creado</th><th></th></tr></thead><tbody>' +
+    users.map(u => {
+      const self = u.id === App.user.id;
+      return '<tr>' +
+      '<td class="mono" style="font:600 12.5px var(--mono)">' + esc(u.user) + (self ? ' <span class="lv lv-INFO">TÚ</span>' : '') + '</td>' +
+      '<td>' + esc(u.name) + '</td>' +
+      '<td>' + (self ? '<span class="chip-estado">' + u.role.toUpperCase() + '</span>' :
+        '<select data-role="' + u.id + '" style="border:1px solid var(--line2);background:var(--card);padding:5px 8px;font:600 11.5px var(--mono)">' +
+        '<option value="analista"' + (u.role==='analista'?' selected':'') + '>analista</option>' +
+        '<option value="admin"' + (u.role==='admin'?' selected':'') + '>admin</option></select>') + '</td>' +
+      '<td class="mono" style="font:600 12px var(--mono)">' + u.docs + '</td>' +
+      '<td class="mono" style="font:500 10.5px var(--mono);color:var(--ink2)">' + fmtTime(u.created) + '</td>' +
+      '<td><div class="row-actions">' + (!self ? '<button class="iconbtn del" data-del="' + u.id + '" title="Eliminar usuario"><i data-lucide="trash-2"></i></button>' : '') + '</div></td></tr>';
+    }).join('') + '</tbody></table></div>';
+  $$('#view-inner [data-role]').forEach(sel => sel.onchange = async () => {
+    try {
+      await API.setRole(App.token, sel.dataset.role, sel.value);
+      toast('Rol actualizado.', 'ok'); renderUsers();
+    } catch(err){ toast(err.message, 'error'); renderUsers(); }
+  });
+  $$('#view-inner [data-del]').forEach(b => b.onclick = async () => {
+    const u = users.find(x => x.id === b.dataset.del);
+    const ok = await confirmDialog({title:'Eliminar usuario', msg:'La cuenta "' + u.user + '" será eliminada. Sus documentos permanecerán en el repositorio. ¿Continuar?'});
+    if (!ok) return;
+    try { await API.deleteUser(App.token, u.id); toast('Usuario eliminado.', 'ok'); renderUsers(); }
+    catch(err){ toast(err.message, 'error'); }
+  });
+  $('#us-bk').onclick = async () => {
+    try {
+      const data = await API.backup(App.token);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
+      a.download = 'sigad-respaldo-' + new Date().toISOString().slice(0,10) + '.json';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast('Respaldo exportado (metadatos, sin archivos binarios).', 'ok');
+    } catch(err){ toast(err.message, 'error'); }
+  };
+  refreshIcons();
+}
+
+/* ============================================================
+   25 · LOGIN / SESIÓN / ARRANQUE
+============================================================ */
+let authMode = 'login';
+function setScreen(s){ document.body.dataset.screen = s; refreshIcons(); }
+ $('#auth-toggle').onclick = () => {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  const reg = authMode === 'register';
+  $('#auth-title').textContent = reg ? 'Crear cuenta' : 'Iniciar sesión';
+  $('#auth-sub').textContent = reg ? 'Las cuentas nuevas se crean con rol de analista' : 'Acceda al repositorio inteligente';
+  $('#f-name-wrap').classList.toggle('hidden', !reg);
+  $('#auth-btn').textContent = reg ? 'Registrarme' : 'Entrar';
+  $('#auth-toggle').textContent = reg ? 'Ya tengo una cuenta' : 'Crear una cuenta nueva';
+  $('#auth-error').textContent = '';
+};
+ $('#peek').onclick = () => {
+  const p = $('#f-pass');
+  const show = p.type === 'password';
+  p.type = show ? 'text' : 'password';
+  $('#peek').innerHTML = '<i data-lucide="' + (show ? 'eye-off' : 'eye') + '"></i>';
+  refreshIcons();
+};
+async function trySubmit(user, pass, name){
+  const btn = $('#auth-btn');
+  btn.disabled = true;
+  const old = btn.textContent;
+  btn.textContent = 'Verificando…';
+  try {
+    if (authMode === 'register') await API.register(name, user, pass);
+    else await API.login(user, pass);
+    await startApp();
+    toast('Sesión iniciada. ¡Bienvenido, ' + App.user.name.split(' ')[0] + '!', 'ok');
+  } catch(err){
+    $('#auth-error').textContent = err.message || 'Error inesperado.';
+  } finally {
+    btn.disabled = false; btn.textContent = old;
+  }
+}
+ $('#login-form').onsubmit = e => {
+  e.preventDefault();
+  trySubmit($('#f-user').value, $('#f-pass').value, $('#f-name').value);
+};
+const quick = (u,p) => { authMode = 'login'; $('#f-user').value = u; $('#f-pass').value = p; trySubmit(u,p); };
+ $('#demo-admin').onclick = () => quick('admin','sigad2024');
+ $('#demo-ana').onclick = () => quick('analista','analista2024');
+
+async function startApp(){
+  const hist = await DB.get('kv', 'chat:' + App.user.id);
+  App.chat = hist ? (hist.msgs || []) : [];
+  await loadRepoMap();
+  Index.rebuild(await DB.all('docs'));
+  $('#side-user').innerHTML =
+    '<div class="avatar">' + esc(App.user.name.split(' ').map(x => x[0]).slice(0,2).join('').toUpperCase()) + '</div>' +
+    '<div class="ut"><div class="un">' + esc(App.user.name) + '</div><div class="ur">' + App.user.role + '</div></div>' +
+    '<button class="iconbtn" id="btn-logout" title="Cerrar sesión"><i data-lucide="log-out"></i></button>';
+  $('#btn-logout').onclick = async () => {
+    try { await API.logout(App.token); } catch(e){}
+    localStorage.removeItem('sigad_token');
+    App.user = null; App.token = null; App.chat = [];
+    setScreen('login');
+    toast('Sesión cerrada correctamente.', 'info');
+  };
+  $('#nav-users').classList.toggle('hidden', App.user.role !== 'admin');
+  $$('#side-nav button').forEach(b => b.onclick = () => nav(b.dataset.route));
+  $('#btn-upload').onclick = openUploadModal;
+  $('#btn-guide').onclick = openGuide;
+  await refreshEngine();
+  await updateNavBadges();
+  setScreen('app');
+  nav('panel');
+}
+async function ensureSeed(){
+  const sync = async (id, name, role, pass) => {
+    const u = await DB.get('users', id);
+    const ok = u && await verifyPass(pass, u.salt, u.hash);
+    if (!u || !ok){
+      const salt = uid();
+      await DB.put('users', {
+        id,
+        name: u ? u.name : name,
+        user: u ? u.user : id,
+        role: u ? u.role : role,
+        salt,
+        hash: await computeHash(pass, salt, preferredAlg()),
+        created: u ? u.created : Date.now()
+      });
+    }
+  };
+  await sync('admin', 'Administrador', 'admin', 'sigad2024');
+  await sync('analista', 'Analista de Prueba', 'analista', 'analista2024');
+  if (!(await DB.get('repos','general'))){
+    await DB.put('repos', {id:'general', name:'General', desc:'Repositorio por defecto del sistema', ownerId:'system', created:Date.now()});
+  }
+}
+(async function boot(){
+  try {
+    await DB.open();
+    await ensureSeed();
+    await Sessions.load();
+    const tok = localStorage.getItem('sigad_token');
+    if (tok){
+      const userId = Sessions.userId(tok);
+      if (userId){
+        const u = await DB.get('users', userId);
+        if (u){ App.user = u; App.token = tok; await startApp(); return; }
+      }
+      localStorage.removeItem('sigad_token');
+    }
+    setScreen('login');
+  } catch(e){
+    console.error(e);
+    setScreen('login');
+    toast('Error al inicializar la base local: ' + (e.message || e), 'error');
+  }
+  refreshIcons();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+FACTURA ELECTRONICA DE VENTA No. FE-001
+Servicios Contables Andes S.A.S. - NIT 901.234.567-8
+Telefono: (607) 655-1234 - Correo: facturacion@contablesandes.com
+Cliente: Comercializadora El Roble S.A.S. - NIT 900.876.543-2
+Fecha de expedicion: 5 de enero de 2024
+Fecha de vencimiento: 19 de febrero de 2024
+Concepto: honorarios contables y tributarios del periodo - Cantidad: 1 unidades
+Valor unitario: $450,000 - Subtotal: $450,000
+IVA (19%): $85,500
+TOTAL A PAGAR: COP $535,500
+Forma de pago: transferencia electronica
+Resolucion de facturacion DIAN No. 1876400000000
+
+La presente factura constituye titulo valor conforme al articulo 774 del Codigo de Comercio.

@@ -1,0 +1,14 @@
+FACTURA ELECTRONICA DE VENTA No. FE-007
+TecnoSuministros del Oriente S.A.S. - NIT 901.222.334-1
+Telefono: (607) 634-7788 - Correo: ventas@tecnosum.com.co
+Cliente: Comercializadora El Roble S.A.S. - NIT 900.876.543-2
+Fecha de expedicion: 11 de enero de 2024
+Fecha de vencimiento: 25 de febrero de 2024
+Concepto: suministro de equipos y repuestos tecnologicos - Cantidad: 3 unidades
+Valor unitario: $1,942,000 - Subtotal: $5,826,000
+IVA (19%): $1,106,940
+TOTAL A PAGAR: COP $6,932,940
+Forma de pago: consignacion bancaria
+Resolucion de facturacion DIAN No. 1876400000006
+
+La presente factura constituye titulo valor conforme al articulo 774 del Codigo de Comercio.

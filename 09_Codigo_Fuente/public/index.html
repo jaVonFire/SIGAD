@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGAD · Sistema Inteligente de Gestión y Análisis Documental</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="login-view"></div>
+
+  <div id="app" hidden>
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">S</span>
+        <div>
+          <strong>SIGAD</strong>
+          <small>Gestión Documental IA</small>
+        </div>
+      </div>
+      <nav id="nav" class="nav"></nav>
+      <div class="side-user">
+        <div class="avatar" id="me-avatar">?</div>
+        <div class="side-user-meta">
+          <strong id="me-name">—</strong>
+          <small id="me-role">—</small>
+        </div>
+        <button id="btn-logout" class="btn btn-ghost" title="Cerrar sesión">Salir</button>
+      </div>
+    </aside>
+    <main id="view" class="view"></main>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
