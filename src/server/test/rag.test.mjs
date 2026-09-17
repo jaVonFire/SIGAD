@@ -169,3 +169,104 @@ test('rag: "resumen del documento" devuelve el resumen generado', async () => {
   assert.ok(ans.html.includes('Resumen'));
   assert.ok(sum.every(s => ans.html.includes(s.slice(0, 30))), 'el resumen debe contener las oraciones generadas');
 });
+
+test('rag: "¿cuántos documentos hay en total?" responde conteo global de TODOS los documentos', async () => {
+  Index.rebuild([]);
+  setDocsLoader(async () => [
+    { id: 'a1', name: 'A.txt', status: 'procesado', category: 'Informe', wordCount: 100 },
+    { id: 'b2', name: 'B.txt', status: 'procesado', category: 'Factura', wordCount: 100 },
+    { id: 'p3', name: 'C.txt', status: 'pendiente', category: null, wordCount: 0 },
+    { id: 'e4', name: 'D.txt', status: 'error', category: null, wordCount: 0 }
+  ]);
+  const ans = await ask('¿Cuántos documentos hay en total?');
+  assert.equal(ans.type, 'answer');
+  assert.equal(ans.intent, 'count');
+  assert.ok(ans.html.includes('4</b> documento'), 'debe contar el total cargado');
+  assert.ok(ans.html.includes('2</b> procesado'), 'debe contar los procesados');
+  assert.ok(ans.html.includes('1</b> pendiente'), 'debe contar los pendientes');
+  assert.ok(ans.html.includes('1</b> con error'), 'debe contar los errores');
+});
+
+test('rag: conteo por categoría "¿cuántas facturas hay?"', async () => {
+  Index.rebuild([]);
+  setDocsLoader(async () => [
+    { id: 'a1', name: 'FE-1.txt', status: 'procesado', category: 'Factura', wordCount: 100 },
+    { id: 'b2', name: 'CT-1.txt', status: 'procesado', category: 'Contrato', wordCount: 100 },
+    { id: 'c3', name: 'FE-2.txt', status: 'procesado', category: 'Factura', wordCount: 100 }
+  ]);
+  const ans = await ask('¿cuántas facturas hay?');
+  assert.equal(ans.intent, 'count');
+  assert.ok(ans.html.includes('3</b> documento'));   // total del repositorio
+  assert.ok(ans.html.includes('2</b> pertenece'), 'debe indicar cuántas facturas hay');
+  assert.ok(ans.html.includes('FE-2.txt'));
+});
+
+test('rag: suma de valores sobre TODOS los documentos usa entidades agregadas', async () => {
+  Index.rebuild([]);
+  setDocsLoader(async () => [
+    { id: 'a1', name: 'FE-1.txt', status: 'procesado', category: 'Factura',
+      entities: JSON.stringify({ montos: ['$100.000', '$50.000'], fechas: [], personas: [], organizaciones: [] }) },
+    { id: 'b2', name: 'FE-2.txt', status: 'procesado', category: 'Factura',
+      entities: JSON.stringify({ montos: ['$250.000'], fechas: [], personas: [], organizaciones: [] }) }
+  ]);
+  const ans = await ask('¿Cuánto suman los valores de las facturas?');
+  assert.equal(ans.intent, 'money');
+  assert.equal(ans.type, 'answer');
+  assert.ok(ans.html.includes('400.000'), 'debe sumar los montos de TODOS los documentos y mostrar el total');
+  assert.ok(ans.html.includes('3</b> valor'), 'debe indicar el número de menciones agregadas');
+});
+
+test('rag: "¿qué documentos están pendientes de pago?" lista documentos con la mención', async () => {
+  Index.rebuild([
+    { id: 'a1', text: 'la factura FE-001 tiene un saldo pendiente de pago por $100.000' },
+    { id: 'b2', text: 'informe de resultados del periodo sin valores' }
+  ]);
+  setDocsLoader(async () => [
+    { id: 'a1', name: 'FE-1.txt', status: 'procesado', category: 'Factura', wordCount: 50 },
+    { id: 'b2', name: 'IN-1.txt', status: 'procesado', category: 'Informe', wordCount: 50 }
+  ]);
+  const ans = await ask('¿Qué documentos están pendientes de pago?');
+  assert.equal(ans.intent, 'pending');
+  assert.equal(ans.type, 'answer');
+  assert.ok(ans.html.includes('FE-1.txt'), 'debe listar el documento que menciona el pago pendiente');
+});
+
+test('rag: "¿cuánto suman los pagos pendientes?" sigue siendo una suma (money)', async () => {
+  Index.rebuild([]);
+  setDocsLoader(async () => [
+    { id: 'a1', name: 'FE-1.txt', status: 'procesado', category: 'Factura',
+      entities: JSON.stringify({ montos: ['$100.000'], fechas: [], personas: [], organizaciones: [] }) }
+  ]);
+  const ans = await ask('¿cuánto suman los pagos pendientes?');
+  assert.equal(ans.intent, 'money');
+  assert.ok(ans.html.includes('100.000'));
+});
+
+test('rag: pregunta sobre CONTENIDO no debe caer en catálogo ("qué documentos hablan sobre X")', async () => {
+  Index.rebuild([
+    { id: 'a1', text: 'el contrato reglamenta el retiro de mercancia y su transporte por carretera' },
+    { id: 'b2', text: 'informe mensual de ventas del periodo' }
+  ]);
+  setDocsLoader(async () => [
+    { id: 'a1', name: 'CT-1.txt', status: 'procesado', category: 'Contrato', wordCount: 100 },
+    { id: 'b2', name: 'IN-1.txt', status: 'procesado', category: 'Informe', wordCount: 100 }
+  ]);
+  const ans = await ask('¿qué documentos hablan sobre retiro de mercancía?');
+  assert.equal(ans.type, 'answer');
+  assert.ok(ans.intent !== 'cat', 'no debe responder como catálogo, actual: ' + ans.intent);
+  assert.ok(ans.intent === 'what', 'debe ser búsqueda de contenido: ' + ans.intent);
+  assert.ok(ans.sources.some(s => s.name === 'CT-1.txt'), 'debe citar el documento que menciona el tema');
+});
+
+test('rag: pregunta narrativa "¿qué dice... sobre el pago?" no debe responder suma (money)', async () => {
+  Index.rebuild([
+    { id: 'a1', text: 'la factura dice que el pago se realiza a 30 dias mediante transferencia' },
+    { id: 'b2', text: 'informe mensual de ventas del periodo' }
+  ]);
+  setDocsLoader(async () => [
+    { id: 'a1', name: 'FE-1.txt', status: 'procesado', category: 'Factura', wordCount: 50 },
+    { id: 'b2', name: 'IN-1.txt', status: 'procesado', category: 'Informe', wordCount: 50 }
+  ]);
+  const ans = await ask('¿qué dice la factura sobre el pago?');
+  assert.equal(ans.intent, 'what', 'debe ser contenido, no agregación: ' + ans.intent);
+});

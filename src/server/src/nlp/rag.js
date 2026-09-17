@@ -2,6 +2,7 @@ import { Index } from './tfidf.js';
 import { expand } from './tokenizer.js';
 import { extractEntities, toNum } from './entities.js';
 import { config } from '../config.js';
+import { parseJson } from '../db.js';
 
 /* ---------- RAG extractivo (consulta en lenguaje natural) ----------
    Flujo: pregunta -> intención -> expansión léxica -> recuperación TF-IDF
@@ -9,12 +10,28 @@ import { config } from '../config.js';
    Soporta modo docId para acotar la consulta a un solo documento.
 */
 
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
 function detectIntent(q){
-  const l = q.toLowerCase();
-  if (/(cuanto|cuánto|valor|total|monto|precio|costo|suma|pagar|pago|recaudo|saldo)/.test(l)) return 'money';
-  if (/(cuando|cuándo|fecha|plazo|vence|vencimiento|vigencia|hasta)/.test(l)) return 'date';
-  if (/(quien|quién|quienes|quiénes|responsable|empresa|persona|emisor|remitente|parte|contratante)/.test(l)) return 'who';
-  if (/(cu[aá]les|qu[eé]\s+documentos?|list[aá]|enum[ée]ra|menciona|documentos?\s+son|categor)/.test(l)) return 'cat';
+  const l = norm(q);
+  /* Conteo: "¿cuántos documentos hay (en total)?", "¿cuántas facturas hay?" */
+  const cuentaCosas = /\bcu[aá]nt(os|as)\b/.test(l) || /\bcantidad de\b/.test(l) || /\bhay\s+en\s+total\b/.test(l);
+  const cosasContables = /\b(documentos?|archivos?|facturas?|contratos?|informes?|correspondencias?|repositorios?|pdfs?|docx?|txts?|soportes?)\b/.test(l);
+  if (cuentaCosas && cosasContables) return 'count';
+  /* Pagos pendientes: "¿qué documentos están pendientes de pago?" (listado, no suma) */
+  if (/\b(pendientes?\s+de\s+pago|pago\s+pendiente|por\s+pagar|sin\s+pagar)\b/.test(l) &&
+      !/(suma|asciende|cu[aá]nto\s+(es|suma|asciende))/.test(l)) return 'pending';
+  /* Narrativa: "¿qué dice/habla/menciona/contiene...?" pide contenido, no una suma */
+  if (/\b(qu[eé]\s+(dice|habla|menciona|contiene|incluye)|hablan)\b/.test(l)) return 'what';
+  const discurso = /\b(sobre|acerca de|relacionad|referente)\b/.test(l);
+  const cantidadKw = /(cu[aá]nto|suma|total|valor|monto|saldo|precio|pagar|pago)/.test(l);
+  if (discurso && !cantidadKw) return 'what';
+  if (/(cuanto|valor|monto|precio|costo|suma|pagar|pago|recaudo|saldo)/.test(l)) return 'money';
+  if (/(cuando|fecha|plazo|vence|vencimiento|vigencia|hasta)/.test(l)) return 'date';
+  if (/(quien|quienes|responsable|empresa|persona|emisor|remitente|parte|contratante)/.test(l)) return 'who';
+  /* Catálogo solo cuando NO es una pregunta sobre contenido ("qué documentos HAY/SON/lista") */
+  if (/cu[aá]les\s+(documentos|son)|documentos?\s+(hay|existen|son|en\s+total|tiene)|(lista|enumera)\b/.test(l) &&
+      !discurso) return 'cat';
   return 'what';
 }
 
@@ -117,6 +134,144 @@ function catalogAnswer(q, docs){
   };
 }
 
+/* --- Respuestas agregadas sobre TODOS los documentos ---
+   Para preguntas generales ("todos los documentos") se tienen en cuenta
+   TODOS los documentos cargados y procesados, agregando sus entidades
+   almacenadas en lugar de limitarse a los mejor puntuados por TF-IDF.
+*/
+function entFromDoc(d){
+  /* parseJson desanida JSON anidado/codificado múltiples veces (datos legados). */
+  return d && d.entities ? parseJson(d.entities) : null;
+}
+
+function gather(key, docs, cat){
+  const pool = cat
+    ? docs.filter(d => d.status === 'procesado' && d.category === cat)
+    : docs.filter(d => d.status === 'procesado');
+  const out = [];
+  pool.forEach(d => {
+    const e = entFromDoc(d);
+    const vals = (e && e[key]) ? e[key].slice(0, 8) : [];
+    if (vals.length) out.push({ doc: d, vals });
+  });
+  return out;
+}
+
+const citeFor = (sources, id) => {
+  const i = sources.findIndex(s => s.id === id);
+  return i < 0 ? '' : cited(sources, sources[i]);
+};
+
+function countAnswer(q, docs){
+  const l = norm(q);
+  const processed = docs.filter(d => d.status === 'procesado');
+  const pendientes = docs.filter(d => d.status === 'pendiente' || d.status === 'procesando');
+  const errores = docs.filter(d => d.status === 'error');
+  const total = docs.length;
+
+  const cat = CATEGORIES.find(c => l.includes(c.toLowerCase())) || null;
+  const ext = /\bpdf\b/.test(l) ? 'pdf' : /\bdocx\b/.test(l) ? 'docx' : /\btxt\b/.test(l) ? 'txt' : null;
+
+  const byCat = {};
+  processed.forEach(d => { const k = d.category || 'Sin categoría'; byCat[k] = (byCat[k] || 0) + 1; });
+  const chips = Object.keys(byCat).length
+    ? '<div class="ans-meta">' + Object.entries(byCat).map(([k, n]) => `<span class="tag-chip">${esc(k)} · ${n}</span>`).join(' ') + '</div>'
+    : '';
+
+  let extra = '';
+  if (cat){
+    const list = processed.filter(d => d.category === cat);
+    extra = `<p class="dim">De los procesados, <b>${list.length}</b> pertenece(n) a la categoría «${esc(cat)}»:</p><ul class="ans-list">` +
+      list.slice(0, 10).map(d => `<li><b>${esc(d.name)}</b> <span class="tag">${esc(d.category)}</span></li>`).join('') + `</ul>` +
+      (list.length > 10 ? `<p class="dim">… y ${list.length - 10} más.</p>` : '');
+  } else if (ext){
+    const list = processed.filter(d => d.ext === ext);
+    extra = `<p class="dim">De los procesados, <b>${list.length}</b> está(n) en formato <b>${ext.toUpperCase()}</b>.</p>`;
+  }
+
+  return {
+    type: 'answer', intent: 'count', conf: 0.97, q,
+    terms: expand(q).filter(x => x.t.length >= 4).map(x => x.t),
+    sources: processed.slice(0, 5).map((d, i) => ({ n: i + 1, id: d.id, name: d.name, category: d.category })),
+    html:
+      `<p class="ans-lead">En el repositorio hay <b>${total}</b> documento(s) en total.</p>` +
+      `<ul class="ans-list">` +
+        `<li>✅ <b>${processed.length}</b> procesado(s) con IA</li>` +
+        `<li>🕒 <b>${pendientes.length}</b> pendiente(s) de procesamiento</li>` +
+        `<li>⚠️ <b>${errores.length}</b> con error</li>` +
+      `</ul>` +
+      chips +
+      extra
+  };
+}
+
+function moneyAnswer(q, docs){
+  const cat = CATEGORIES.find(c => norm(q).includes(c.toLowerCase())) || null;
+  const rows = gather('montos', docs, cat);
+  if (!rows.length) return null;
+  const out = rows.map(r => ({ id: r.doc.id, name: r.doc.name, category: r.doc.category || null }));
+  let total = 0, n = 0;
+  rows.forEach(r => r.vals.forEach(v => { total += toNum(v); n++; }));
+  const lead = cat
+    ? `<p class="ans-lead">En <b>${rows.length}</b> documento(s) de la categoría «${esc(cat)}», detecté <b>${n}</b> valor(es):</p>`
+    : `<p class="ans-lead">En <b>${rows.length}</b> documento(s) del repositorio detecté <b>${n}</b> mención(es) de valor:</p>`;
+  return {
+    type: 'answer', intent: 'money', conf: 0.92, q,
+    terms: expand(q).filter(x => x.t.length >= 4).map(x => x.t),
+    sources: out,
+    html:
+      lead +
+      '<ul class="ans-list">' +
+      rows.slice(0, 8).map(r => `<li><b>${esc(r.doc.name)}</b> — ${r.vals.map(v => '<span class="mono">' + esc(v) + '</span>').join(' · ')} ${citeFor(out, r.doc.id)}</li>`).join('') +
+      '</ul>' +
+      (rows.length > 8 ? `<p class="dim">… y ${rows.length - 8} documento(s) más con valores.</p>` : '') +
+      (n > 1 ? `<div class="ans-total">Σ Total detectado: $${total.toLocaleString('es-CO')}</div>` : '')
+  };
+}
+
+function dateAnswer(q, docs){
+  const cat = CATEGORIES.find(c => norm(q).includes(c.toLowerCase())) || null;
+  const rows = gather('fechas', docs, cat);
+  if (!rows.length) return null;
+  const out = rows.map(r => ({ id: r.doc.id, name: r.doc.name, category: r.doc.category || null }));
+  return {
+    type: 'answer', intent: 'date', conf: 0.88, q,
+    terms: expand(q).filter(x => x.t.length >= 4).map(x => x.t),
+    sources: out,
+    html:
+      `<p class="ans-lead">Fechas mencionadas en <b>${rows.length}</b> documento(s) del repositorio:</p><ul class="ans-list">` +
+      rows.slice(0, 8).map(r => `<li><b>${esc(r.doc.name)}</b> — ${r.vals.slice(0, 5).map(v => '<span class="mono">' + esc(v) + '</span>').join(' · ')} ${citeFor(out, r.doc.id)}</li>`).join('') + '</ul>' +
+      (rows.length > 8 ? `<p class="dim">… y ${rows.length - 8} documento(s) más.</p>` : '')
+  };
+}
+
+function whoAnswer(q, docs){
+  const cat = CATEGORIES.find(c => norm(q).includes(c.toLowerCase())) || null;
+  const pool = cat
+    ? docs.filter(d => d.status === 'procesado' && d.category === cat)
+    : docs.filter(d => d.status === 'procesado');
+  const rows = [];
+  pool.forEach(d => {
+    const e = entFromDoc(d);
+    const vals = [
+      ...((e && e.personas) ? e.personas : []).slice(0, 3),
+      ...((e && e.organizaciones) ? e.organizaciones : []).slice(0, 2)
+    ];
+    if (vals.length) rows.push({ doc: d, vals });
+  });
+  if (!rows.length) return null;
+  const out = rows.map(r => ({ id: r.doc.id, name: r.doc.name, category: r.doc.category || null }));
+  return {
+    type: 'answer', intent: 'who', conf: 0.9, q,
+    terms: expand(q).filter(x => x.t.length >= 4).map(x => x.t),
+    sources: out,
+    html:
+      `<p class="ans-lead">Personas y organizaciones identificadas en <b>${rows.length}</b> documento(s) del repositorio:</p><ul class="ans-list">` +
+      rows.slice(0, 8).map(r => `<li><b>${esc(r.doc.name)}</b> — ${r.vals.map(v => esc(v)).join(' · ')} ${citeFor(out, r.doc.id)}</li>`).join('') + '</ul>' +
+      (rows.length > 8 ? `<p class="dim">… y ${rows.length - 8} documento(s) más.</p>` : '')
+  };
+}
+
 /* --- Banco de respuestas: saludos, ayuda y avisos --- */
 const GENERAL_SUGGESTIONS = [
   '¿Qué documentos hay en el repositorio?',
@@ -147,15 +302,16 @@ function isHelp(q){
 }
 
 function greetingAnswer(q, docs){
-  const single = docs.length === 1;
+  const proc = docs.filter(d => d.status === 'procesado');
+  const single = proc.length === 1;
   const suggestions = single ? DOC_SUGGESTIONS : GENERAL_SUGGESTIONS;
   return {
     type:'answer', intent:'saludo', conf:1, q, terms: [],
     sources: [],
     html:
       `<p>¡Hola! 👋 Soy el asistente IA de <b>SIGAD</b>. ${single
-        ? `Ahora mismo consulto <b>${esc(docs[0].name)}</b> y responderé SOLO con su contenido.`
-        : `Tengo <b>${docs.length}</b> documento(s) procesado(s) en el repositorio.`}</p>` +
+        ? `Ahora mismo consulto <b>${esc(proc[0].name)}</b> y responderé SOLO con su contenido.`
+        : `Tengo <b>${proc.length}</b> documento(s) procesado(s) en el repositorio.`}</p>` +
       `<div class="ans-lead">Intenta con algo como:</div><ul class="ans-list">` +
       suggestions.map(s => `<li>${esc(s)}</li>`).join('') + `</ul>` +
       `<p class="dim">💡 Usa el selector de arriba para elegir <b>un documento concreto</b> o volver a <b>todos los documentos</b>.</p>`
@@ -163,7 +319,8 @@ function greetingAnswer(q, docs){
 }
 
 function helpAnswer(q, docs){
-  const single = docs.length === 1;
+  const proc = docs.filter(d => d.status === 'procesado');
+  const single = proc.length === 1;
   return {
     type:'answer', intent:'help', conf:1, q, terms: [],
     sources: [],
@@ -175,9 +332,10 @@ function helpAnswer(q, docs){
       `<li>📅 <b>Fechas:</b> "¿qué fechas de vencimiento aparecen?".</li>` +
       `<li>🏢 <b>Entidades:</b> "¿quién emitió las facturas?".</li>` +
       `<li>ℹ️ <b>Contenido:</b> "¿hay algo sobre retiro de mercancía?".</li>` +
+      `<li>🔢 <b>Conteo:</b> "¿cuántos documentos hay en el repositorio?".</li>` +
       `</ul>` +
       (single
-        ? `<p class="dim">Como consulto <b>${esc(docs[0].name)}</b>, responderé solo con su contenido. Pide el <b>resumen</b> para empezar.</p>`
+        ? `<p class="dim">Como consulto <b>${esc(proc[0].name)}</b>, responderé solo con su contenido. Pide el <b>resumen</b> para empezar.</p>`
         : `<p class="dim">💡 Para consultar <b>un solo documento</b>, selecciónalo en el selector de arriba.</p>`)
   };
 }
@@ -280,14 +438,32 @@ export async function ask(q, opts){
   if (String(q).trim().length <= 55 && isGreeting(q)) return greetingAnswer(q, docs);
   if (isHelp(q)) return helpAnswer(q, docs);
 
-  /* Catálogo: ¿qué documentos son X? */
-  if (detectIntent(q) === 'cat'){
+  const intent = detectIntent(q);
+  const terms = expand(q).filter(x => x.t.length >= 4).map(x => x.t);
+
+  /* Catálogo: "¿cuáles documentos son X?" */
+  if (intent === 'cat'){
     const catAns = catalogAnswer(q, docs);
     if (catAns) return catAns;
   }
 
+  /* Conteo: "¿cuántos documentos hay en total?" — responde sobre TODOS los documentos cargados */
+  if (intent === 'count') return countAnswer(q, docs);
+
+  /* Respuestas sobre "todos los documentos": se agregan TODOS los documentos cargados
+     y procesados (no solo los mejor puntuados por TF-IDF) usando sus entidades. */
+  if (intent === 'money'){
+    const agg = moneyAnswer(q, docs);
+    if (agg) return augmentWithLlm(agg, q);
+  } else if (intent === 'date'){
+    const agg = dateAnswer(q, docs);
+    if (agg) return agg;
+  } else if (intent === 'who'){
+    const agg = whoAnswer(q, docs);
+    if (agg) return agg;
+  }
+
   const ranked = Index.scoreQuery(q).slice(0, 4);
-  const terms = expand(q).filter(x => x.t.length >= 4).map(x => x.t);
 
   if (!ranked.length || ranked[0].score < 0.015){
     return noneAnswer({ q, terms, note: '<p>No encontré documentos relacionados con tu pregunta.</p>', suggestions: GENERAL_SUGGESTIONS });
@@ -305,8 +481,22 @@ export async function ask(q, opts){
   }
 
   const conf = Math.min(1, ranked[0].score * 2.2);
-  const intent = detectIntent(q);
   let body = '';
+  const pendingPhrase = /(pendientes?\s+de\s+pago|pago\s+pendiente|por\s+pagar|sin\s+pagar)/i.test(q);
+
+  /* "¿Qué documentos están pendientes de pago?" → listar los documentos que lo mencionan */
+  if (intent === 'pending' || (intent === 'money' && pendingPhrase)){
+    const rows = sources.map(s => ({ s, snip: s.snippets.find(x => /pago|pendiente|saldo|vencimiento|abono/i.test(x)) || s.snippets[0] })).filter(r => r.snip);
+    if (rows.length){
+      return augmentWithLlm({
+        type:'answer', intent:'pending', conf:0.85, terms, sources,
+        html:
+          `<p class="ans-lead">Documentos con menciones de <b>pagos pendientes</b> en el repositorio:</p><ul class="ans-list">` +
+          rows.map(r => `<li><b>${esc(r.s.name)}</b> ${cited(sources, r.s)}<br><span class="dim">${highlight(r.snip, terms)}</span></li>`).join('') +
+          `</ul>`
+      }, q);
+    }
+  }
 
   if (intent === 'money'){
     let total = 0, n = 0;
@@ -320,7 +510,7 @@ export async function ask(q, opts){
       body = '<p class="ans-lead">Encontré ' + n + ' menciones de valores en ' + sources.length + ' documento(s):</p><ul class="ans-list">' + rows + '</ul>' +
         (n > 1 ? '<div class="ans-total">Σ Valores detectados: $' + total.toLocaleString('es-CO') + '</div>' : '');
     } else {
-      return askGeneric(sources, terms);
+      body = askBody(sources, terms);
     }
   } else if (intent === 'date'){
     const rows = sources.map(s => {
@@ -331,7 +521,7 @@ export async function ask(q, opts){
     if (rows){
       body = '<p class="ans-lead">Fechas relevantes encontradas en el repositorio:</p><ul class="ans-list">' + rows + '</ul>';
     } else {
-      return askGeneric(sources, terms);
+      body = askBody(sources, terms);
     }
   } else if (intent === 'who'){
     const rows = sources.map(s => {
@@ -343,7 +533,7 @@ export async function ask(q, opts){
     if (rows){
       body = '<p class="ans-lead">Actores identificados en los documentos más relevantes:</p><ul class="ans-list">' + rows + '</ul>';
     } else {
-      return askGeneric(sources, terms);
+      body = askBody(sources, terms);
     }
   } else {
     body = askBody(sources, terms);

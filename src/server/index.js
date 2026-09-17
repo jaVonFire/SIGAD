@@ -24,7 +24,7 @@ ensureDefaults();
 Index.rebuild(DocService.processedForIndex());
 try { Embedder.train(DocService.processedForIndex()); }
 catch (e){ console.error('[SIGAD] No se pudieron construir los embeddings LSA:', e.message); }
-setDocsLoader(async () => DocService.processedForIndex());
+setDocsLoader(async () => DocService.allForChat());
 
 const app = express();
 app.set('trust proxy', 1);

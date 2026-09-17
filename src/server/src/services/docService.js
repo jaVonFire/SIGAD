@@ -112,6 +112,12 @@ export const DocService = {
     return db.prepare('SELECT * FROM docs WHERE status = ? AND text IS NOT NULL').all('procesado');
   },
 
+  /* Para el chat: TODOS los documentos (incluye pendientes/errores, para poder responder
+     "¿cuántos documentos hay en total?" contabilizando todo lo cargado). */
+  allForChat(){
+    return db.prepare('SELECT * FROM docs ORDER BY uploadedAt ASC').all();
+  },
+
   byName(name){
     return db.prepare('SELECT id FROM docs WHERE name = ?').get(name);
   }

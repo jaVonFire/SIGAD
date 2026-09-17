@@ -1,7 +1,7 @@
 import { api } from '../api.js';
 import { esc } from '../ui.js';
 
-const INTENT_LABEL = { money: '💰 Valor / dinero', date: '📅 Fecha', who: '🏢 Entidad / persona', what: '📋 Contenido', cat: '📚 Catálogo', saludo: '👋 Saludo', help: '❓ Ayuda', none: '¬ Sin intención' };
+const INTENT_LABEL = { money: '💰 Valor / dinero', date: '📅 Fecha', who: '🏢 Entidad / persona', what: '📋 Contenido', cat: '📚 Catálogo', saludo: '👋 Saludo', help: '❓ Ayuda', count: '🔢 Conteo del repositorio', pending: '💰 Pagos pendientes', none: '¬ Sin intención' };
 
 const GENERAL_CHIPS = [
   '¿Qué documentos hay en el repositorio?',
