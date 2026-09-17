@@ -5,8 +5,8 @@ from docx.shared import Pt, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
 
-OUT_DOCX = r"C:\Users\javie\OneDrive\Desktop\UTS\Sis Empresariales\sigad\04_Pruebas\Documento_de_Pruebas_de_Funcionamiento.docx"
-IMG = r"C:\Users\javie\OneDrive\Desktop\UTS\Sis Empresariales\sigad\04_Pruebas\imagenes"
+OUT_DOCX = r"C:\Users\javie\OneDrive\Desktop\UTS\Sis Empresariales\sigad\Documentacion\04_Pruebas\Documento_de_Pruebas_de_Funcionamiento.docx"
+IMG = r"C:\Users\javie\OneDrive\Desktop\UTS\Sis Empresariales\sigad\Documentacion\04_Pruebas\imagenes"
 TITULO = "Pruebas de Funcionamiento del Aplicativo"
 SUBTITULO = "SIGAD · Sistema Inteligente de Gestión y Análisis Documental"
 

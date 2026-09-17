@@ -9,7 +9,7 @@ import fs from 'node:fs';
 const PW_DIR = 'C:/Users/javie/AppData/Local/Temp/opencode/pw';
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 const BASE = 'http://localhost:3200';
-const OUT = 'C:/Users/javie/OneDrive/Desktop/UTS/Sis Empresariales/sigad/04_Pruebas/imagenes';
+const OUT = 'C:/Users/javie/OneDrive/Desktop/UTS/Sis Empresariales/sigad/Documentacion/04_Pruebas/imagenes';
 
 const require = createRequire(path.join(PW_DIR, 'package.json'));
 const { chromium } = require('playwright-core');

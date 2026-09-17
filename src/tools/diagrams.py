@@ -126,7 +126,7 @@ def diagrama_arquitectura():
     draw_box(d, x, y, w, 110, 'CAPA DE PERSISTENCIA Y ALMACENAMIENTO',
              lines=('SQLite (node:sqlite, modo WAL): users · repos · docs · sessions · events · chat',
                     'Almacenamiento de archivos: uploads/ (identificador UUID + nombre original)',
-                    'Corpus de prueba: 11_Documentos_Prueba (33 documentos)'))
+                    'Corpus de prueba: Documentacion/10_Documentos_Prueba (33 documentos)'))
     save(im, 'arquitectura.png')
 
 
@@ -241,7 +241,7 @@ def diagrama_despliegue():
                     'data/sigad.sqlite — base de datos SQLite (WAL)',
                     'Índice TF-IDF en memoria (reconstruible al iniciar)'))
     draw_box(d, 620, y2, 460, 120, 'CORPUS DE PRUEBA',
-             lines=('11_Documentos_Prueba/ — 33 documentos',
+             lines=('Documentacion/10_Documentos_Prueba/ — 33 documentos',
                     'Distribución: contrato, factura, correspondencia, informe',
                     'Lectura para reimportación controlada'))
     d.line([850, y + 165, 850, y2], fill=LINE, width=2)

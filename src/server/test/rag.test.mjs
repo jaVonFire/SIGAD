@@ -9,7 +9,7 @@ import { setDocsLoader, ask } from '../src/nlp/rag.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
-const CORPUS = path.resolve(ROOT, '../11_Documentos_Prueba');
+const CORPUS = path.resolve(ROOT, '../Documentacion/10_Documentos_Prueba');
 
 const fe001 = fs.readFileSync(path.join(CORPUS, 'FE-001.txt'), 'utf8');
 

@@ -217,7 +217,7 @@ COUNTS = {"factura": 9, "contrato": 9, "correspondencia": 8, "informe": 7}
 FMT_CYCLE = ["txt", "pdf", "docx"]
 
 
-def main(dest="../../11_Documentos_Prueba"):
+def main(dest="../../Documentacion/10_Documentos_Prueba"):
     dest = os.path.abspath(dest)
     os.makedirs(dest, exist_ok=True)
     manifest = []
@@ -250,5 +250,5 @@ def main(dest="../../11_Documentos_Prueba"):
 
 
 if __name__ == "__main__":
-    d = sys.argv[1] if len(sys.argv) > 1 else "../../11_Documentos_Prueba"
+    d = sys.argv[1] if len(sys.argv) > 1 else "../../Documentacion/10_Documentos_Prueba"
     main(d)

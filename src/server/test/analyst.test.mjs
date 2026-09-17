@@ -7,7 +7,7 @@ import { analyzeSummary } from '../src/nlp/analyst.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
-const CORPUS = path.resolve(ROOT, '../11_Documentos_Prueba');
+const CORPUS = path.resolve(ROOT, '../Documentacion/10_Documentos_Prueba');
 
 const read = f => fs.readFileSync(path.join(CORPUS, f), 'utf8');
 const ct004 = read('CT-004.txt');

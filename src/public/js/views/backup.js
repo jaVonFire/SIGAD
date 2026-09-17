@@ -19,7 +19,7 @@ export async function render(root){
     </div>
     <div class="card" style="margin-top:14px">
       <h2>Corpus de prueba</h2>
-      <p class="dim">Re-importa los documentos de la carpeta <b>11_Documentos_Prueba</b> (construidos con el generador del proyecto) cuando se haya modificado o limpiado la base de datos.</p>
+      <p class="dim">Re-importa los documentos de la carpeta <b>Documentacion/10_Documentos_Prueba</b> (construidos con el generador del proyecto) cuando se haya modificado o limpiado la base de datos.</p>
       <button class="btn small" id="btn-seed">Importar corpus (33 documentos)</button>
     </div>`;
 

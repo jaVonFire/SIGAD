@@ -8,7 +8,7 @@ import fs from 'node:fs';
 const PW_DIR = 'C:/Users/javie/AppData/Local/Temp/opencode/pw';
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 const BASE = 'http://localhost:3200';
-const OUT = 'C:/Users/javie/OneDrive/Desktop/UTS/Sis Empresariales/sigad/04_Pruebas/imagenes';
+const OUT = 'C:/Users/javie/OneDrive/Desktop/UTS/Sis Empresariales/sigad/Documentacion/04_Pruebas/imagenes';
 const PROC_FILE = 'C:/Users/javie/AppData/Local/Temp/opencode/subida/PRUEBA-OPERATIVA-001.txt';
 const EMPTY_FILE = 'C:/Users/javie/AppData/Local/Temp/opencode/subida/ERROR-VACIO.txt';
 

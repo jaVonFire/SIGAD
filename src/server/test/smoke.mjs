@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
 const PORT = 3199;
 const BASE = `http://localhost:${PORT}`;
-const CORPUS = path.resolve(ROOT, '../11_Documentos_Prueba');
+const CORPUS = path.resolve(ROOT, '../Documentacion/10_Documentos_Prueba');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const fail = msg => { console.error('✗ ' + msg); process.exitCode = 1; };
