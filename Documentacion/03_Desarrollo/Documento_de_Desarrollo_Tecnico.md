@@ -661,7 +661,8 @@ Este ciclo confirmó el objetivo de la mejora: el chat "TODOS LOS DOCUMENTOS" re
 ## 12. Soporte de la solución (semillas y corpus)
 
 - `server/seed.js`: script CLI que (1) asegura usuarios y repo por defecto, (2) recorre e importa el corpus de `Documentacion/10_Documentos_Prueba` y (3) ejecuta el pipeline por documento importado. Soporta `--corpus-only` para reimportar sin tocar cuentas.
-- `server/tools/diagrams.py`: genera los diagramas Mermaid usados en el Bloque 2 (componentes, secuencia RAG y despliegue), manteniendo los diagramas reproducibles desde el código.
+- `server/tools/diagrams.py` (ubicado en `src/tools/diagrams.py`): genera con Pillow las 8 imágenes de la fase de diseño (arquitectura, casos de uso, componentes, despliegue, dos secuencias, MER y flujo) en `Documentacion/02_Diseno/imagenes/`, manteniéndolas reproducibles desde el código con un solo comando.
+- Bitácora de desarrollo: `Documentacion/03_Desarrollo/Bitacora_de_Desarrollo.md` registra cronológicamente el proceso constructivo (commits, decisiones técnicas e incidencias), trazable con el historial de Git.
 - Corpus de pruebas (33 documentos): series **FE** (facturas), **CT** (contratos), **CO** (correspondencia) e **IN** (informes) distribuidas en formatos **PDF/DOCX/TXT**, descritas por el manifiesto `_manifesto_corpus.csv` con campos nombre, categoría y formato.
 
 ---

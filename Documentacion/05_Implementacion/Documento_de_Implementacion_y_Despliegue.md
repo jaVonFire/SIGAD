@@ -28,8 +28,9 @@
 7. Plan de implementación por fases
 8. Migración de datos y reversibilidad
 9. Monitoreo y manejo de fallas
-10. Checklist de verificación post-instalación
-11. Referencias
+10. Plan básico de mantenimiento
+11. Checklist de verificación post-instalación
+12. Referencias
 
 ---
 
@@ -238,7 +239,57 @@ Todos los eventos (login, cargas, pipeline, errores, seeds, resets) quedan en la
 
 ---
 
-## 10. Checklist de verificación post-instalación
+## 10. Plan básico de mantenimiento
+
+**Objetivo:** preservar la operatividad, la seguridad y la actualidad de SIGAD tras su puesta en marcha, con un esfuerzo mínimo y procedimientos reproducibles.
+
+### 10.1 Tipos de mantenimiento previstos
+
+| Tipo | Descripción | Ejemplo en SIGAD |
+|---|---|---|
+| Correctivo | Corregir fallas detectadas en operación | Error en la extracción de un PDF con codificación inusual |
+| Preventivo | Evitar fallas mediante rutinas programadas | Respaldos periódicos y revisión de bitácora |
+| Adaptativo | Ajustar a cambios del entorno | Actualización de Node.js o de `pdfjs-dist`/`mammoth` |
+| Perfectivo | Mejorar capacidades existentes | Nuevas intenciones del chat, más categorías |
+
+### 10.2 Rutina de mantenimiento
+
+| Frecuencia | Actividad | Responsable |
+|---|---|---|
+| Diaria | Revisar la bitácora (`events`) buscando niveles `WARN`/`ERROR` | Administrador |
+| Semanal | Exportar respaldo lógico (`GET /api/backup`) y verificar restauración en un entorno de prueba | Administrador |
+| Semanal | Revisar documentos en estado `error` y reprocesarlos | Analista / Administrador |
+| Mensual | Copia física de `data/sigad.sqlite` + `uploads/` a un medio externo | Administrador |
+| Mensual | Revisar el uso de disco de `uploads/` y depurar documentos obsoletos | Administrador |
+| Semestral | Actualizar dependencias (`npm outdated` / `npm update`) en entorno de prueba antes de producción | Desarrollador |
+| Semestral | Revisar `SESSION_TTL_DAYS`, límites de carga y variables de entorno | Desarrollador |
+| Anual | Revisar y actualizar la documentación técnica y de usuario | Desarrollador |
+
+### 10.3 Procedimiento de cambio y despliegue
+
+1. Crear una rama de trabajo y desarrollar el cambio.
+2. Ejecutar `npm.cmd test` (debe dar 38/38) y el smoke E2E (`node server/test/smoke.mjs`).
+3. Actualizar la documentación afectada (código ↔ documentos de las cinco fases).
+4. Respaldar la base y los archivos antes de desplegar.
+5. Desplegar y verificar el checklist de la sección 11.
+6. Registrar el cambio en el control de versiones (Git) con mensaje descriptivo.
+
+### 10.4 Criterios de reconstrucción
+
+- Los índices en memoria (TF-IDF, modelo Bayes y espacio LSA) se reconstruyen automáticamente al reiniciar el servidor a partir de `docs.text`; no requieren mantenimiento manual.
+- Si se sospecha corrupción de índices, basta con reiniciar el proceso (no afecta a los datos persistidos).
+- Si se corrompe la base, restaurar desde el respaldo físico o lógico (sección 6).
+
+### 10.5 Indicadores de salud a vigilar
+
+- Proporción de documentos en estado `procesado` frente al total (debe mantenerse alta).
+- Número de errores por período en la bitácora.
+- Crecimiento del archivo `data/sigad.sqlite` y de `uploads/`.
+- Tiempo de respuesta del chat y del panel.
+
+---
+
+## 11. Checklist de verificación post-instalación
 
 - [ ] `npm install` sin errores.
 - [ ] `.env` creado desde `.env.example`.
@@ -254,7 +305,7 @@ Todos los eventos (login, cargas, pipeline, errores, seeds, resets) quedan en la
 
 ---
 
-## 11. Referencias
+## 12. Referencias
 
 1. Node.js — Guía de instalación y módulos nativos (2026).
 2. npm — Best practices para publicación e install (2026).

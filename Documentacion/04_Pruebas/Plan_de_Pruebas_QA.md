@@ -24,12 +24,13 @@
 3. Ambiente de pruebas y datos
 4. Matriz de trazabilidad requisito–prueba
 5. Pruebas funcionales manuales (con evidencias)
-6. Pruebas automatizadas
-7. Prueba de integración E2E (smoke)
-8. Resultados y métricas
-9. Defectos detectados y correcciones
-10. Conclusiones y recomendaciones
-11. Referencias
+6. Pruebas de seguridad básicas
+7. Pruebas automatizadas
+8. Prueba de integración E2E (smoke)
+9. Resultados y métricas
+10. Defectos detectados y correcciones
+11. Conclusiones y recomendaciones
+12. Referencias
 
 ---
 
@@ -54,7 +55,7 @@ Se aplicó la pirámide de pruebas clásica:
 
 ```
         ▲  E2E / smoke (2 casos)                       — ruta crítica completa
-      ▲▲▲  Pruebas manuales funcionales (12 pantallas) — aceptación del usuario
+      ▲▲▲  Pruebas manuales funcionales (21 pantallas) — aceptación del usuario
     ▲▲▲▲▲  Integración (router: 10 casos)              — middleware + rutas + datos
   ▲▲▲▲▲▲▲▲  Unitarias (RAG 22 · Analyst 4)             — lógica de IA y PLN
 ```
@@ -150,9 +151,31 @@ Ejecutadas en el navegador contra `http://localhost:3000`; cada pantalla captura
 
 ---
 
-## 6. Pruebas automatizadas
+## 6. Pruebas de seguridad básicas
 
-### 6.1 Inventario de casos
+Se verificaron los controles de seguridad descritos en el Documento de Diseño (§7.1). Las pruebas combinan verificación automatizada (a través de `router.test.mjs` y del smoke E2E) y verificación manual sobre la interfaz.
+
+| ID | Control verificado | Procedimiento | Resultado esperado | Evidencia |
+|---|---|---|---|---|
+| S1 | Contraseñas no recuperables | Inspeccionar `users` tras el *seed* | `hash` con 128 caracteres hex (scrypt, 64 bytes); nunca la contraseña en claro; `salt` UUID | Consulta a `data/sigad.sqlite` |
+| S2 | Token de sesión no almacenado en claro | Inspeccionar `sessions` | Solo existe `tokenHash` (SHA-256); el token original vive únicamente en el cliente | Consulta a `sessions` |
+| S3 | Acceso denegado sin autenticación | `GET /api/docs` sin cabecera `Authorization` | Respuesta 401 | `router.test.mjs` (middleware `authRequired`) |
+| S4 | Sesión vencida rechazada | Petición con token expirado | 401 y eliminación de la sesión (`cleanSessions`) | `router.test.mjs` |
+| S5 | Autorización por rol | `analista` invoca endpoints de administración (usuarios, respaldo, reimportación de corpus) | 403 o redirección al listado de documentos | `router.test.mjs` · `11_11_analista_menu.png` · `12_12_analista_redirect.png` |
+| S6 | Verificación de propiedad al eliminar | `analista` intenta eliminar un documento de otro propietario | Rechazo (solo `admin` o `ownerId`) | `router.test.mjs` |
+| S7 | Escape de XSS | Pregunta con `<script>alert(1)</script>` en el chat | El texto se muestra escapado, sin ejecución | `esc()` en frontend y `rag.js` |
+| S8 | Límite de tamaño de carga | Subir archivo mayor a 10 MB | Rechazo de multer con error controlado | `middleware.js` (upload) |
+| S9 | Formato no permitido | Subir extensión distinta de PDF/DOCX/TXT | Estado `error` con motivo | `10_10_caso_error.png` |
+| S10 | Saneamiento de nombres de archivo | Nombre con caracteres de ruta (`../`) | Nombre saneado para descarga (`sanitizeFilename`) | `03_Desarrollo` §5 |
+| S11 | Secretos fuera del repositorio | `git ls-files` sobre el proyecto | `.env` no versionado; solo `.env.example` | `src/.gitignore` |
+
+**Resultado:** 11 controles verificados; 0 hallazgos críticos. Se registra como recomendación automatizar pruebas de seguridad ofensiva (inyección, fuerza bruta de login) en una iteración futura, dado que el alcance actual cubre la seguridad básica exigida.
+
+---
+
+## 7. Pruebas automatizadas
+
+### 7.1 Inventario de casos
 
 | Archivo | Casos | Objeto de prueba |
 |---|---|---|
@@ -163,7 +186,7 @@ Ejecutadas en el navegador contra `http://localhost:3000`; cada pantalla captura
 | `smoke.mjs` | 2 (bloques) | Arranque del servidor + flujo E2E completo. |
 | **Total general** | **38** | — |
 
-### 6.2 Salida de ejecución (resumida)
+### 7.2 Salida de ejecución (resumida)
 
 ```
 > node --test "server/test/*.test.mjs"
@@ -187,7 +210,7 @@ Ejecutadas en el navegador contra `http://localhost:3000`; cada pantalla captura
 
 **Observaciones de estabilidad:** los casos de RAG no dependen de red ni de la base real (usan `setDocsLoader` con datos sintéticos), por lo que son deterministas y repetibles. El único test "de red" corre solo en ejecución manual con el servidor arriba.
 
-### 6.3 Casos de regresión añadidos en la iteración de mejora
+### 7.3 Casos de regresión añadidos en la iteración de mejora
 
 Dos pruebas nuevas garantizan el comportamiento corregido:
 
@@ -198,7 +221,7 @@ Además, el caso *"suma de valores sobre TODOS los documentos usa entidades agre
 
 ---
 
-## 7. Prueba de integración E2E (smoke)
+## 8. Prueba de integración E2E (smoke)
 
 `server/test/smoke.mjs` ejecuta el flujo crítico completo sobre una base aislada:
 
@@ -223,7 +246,7 @@ Al finalizar, el script elimina `data/smoke.sqlite` y `uploads/smoke` (autolimpi
 
 ---
 
-## 8. Resultados y métricas
+## 9. Resultados y métricas
 
 | Métrica | Valor |
 |---|---|
@@ -239,28 +262,28 @@ Al finalizar, el script elimina `data/smoke.sqlite` y `uploads/smoke` (autolimpi
 
 ---
 
-## 9. Defectos detectados y correcciones
+## 10. Defectos detectados y correcciones
 
-### 9.1 Defecto 1 — El chat general respondía "catálogo" a preguntas de contenido
+### 10.1 Defecto 1 — El chat general respondía "catálogo" a preguntas de contenido
 - **Síntoma:** `"¿qué documentos hablan sobre retiro de mercancía?"` se respondía como catálogo (listado por categoría) en lugar de extraer fragmentos con el tema.
 - **Causa raíz:** la detección de intención daba prioridad al patrón `cuáles documentos`/`documentos hay`, activado por el sujeto "documentos", aun cuando la pregunta pedía contenido.
 - **Corrección:** reescritura de `detectIntent` con precedencia explícita: regla narrativa fuerte (`qué dice/habla/menciona/contiene/incluye`, `hablan`) antes del catálogo; guarda de "discurso" (`sobre/acerca de/relacionado`) que bloquea `cat` cuando no hay palabras de cantidad; el catálogo solo responde cuando es una pregunta **de inventario**.
 - **Verificación:** prueba de regresión *contenido vs. catálogo* (verde) y consulta en vivo.
 
-### 9.2 Defecto 2 — Las entidades almacenadas no se leían (JSON anidado legado)
+### 10.2 Defecto 2 — Las entidades almacenadas no se leían (JSON anidado legado)
 - **Síntoma:** preguntas como `"¿cuánto suman los valores de las facturas?"` retornaban "no encontré" en el repositorio real, aunque las entidades existieran.
 - **Causa raíz:** los datos sembrados quedaron **triple-codificados** (JSON dentro de JSON); `JSON.parse` de un solo nivel devolvía una cadena sin entidades utilizables.
 - **Corrección:** `rag.js::entFromDoc` usa el helper `parseJson` de `db.js`, que desanida hasta 8 niveles; se añadió cobertura directa de este caso en `router.test.mjs`.
 - **Verificación:** suma agregada en vivo devolvió 9 documentos y Σ total.
 
-### 9.3 Mejora funcional — Respuestas agregadas sobre TODOS los documentos
+### 10.3 Mejora funcional — Respuestas agregadas sobre TODOS los documentos
 - **Síntoma:** las respuestas de suma/valor dependían de los 4 mejores documentos de TF-IDF → totales incompletos.
 - **Corrección:** nuevas funciones `countAnswer`, `moneyAnswer`, `dateAnswer`, `whoAnswer`, `pending` que **agregan las entidades de todos los procesados** (con filtro opcional de categoría) y citan cada fuente.
 - **Verificación:** `"¿cuánto suman los pagos pendientes?"` mantiene intención `money` (prueba dedicada) y el conteo global distingue procesados/pendientes/errores.
 
 ---
 
-## 10. Conclusiones y recomendaciones
+## 11. Conclusiones y recomendaciones
 
 1. La corrección de la intención y de la deserialización de entidades devolvió al chat general su propósito: responder **sobre la totalidad del repositorio** con valores agregados y verificables.
 2. El RAG extractivo con citas cubre verificabilidad y transparencia; la capa LLM exterior es opcional y degrada con gracia (ninguna prueba depende de ella).
@@ -269,7 +292,7 @@ Al finalizar, el script elimina `data/smoke.sqlite` y `uploads/smoke` (autolimpi
 
 ---
 
-## 11. Referencias
+## 12. Referencias
 
 1. NIST (2019). *ISO/IEC/IEEE 29119 — Software and systems engineering software testing*.
 2. Myers, G., Sandler, C., Badgett, T. (2011). *The Art of Software Testing*.

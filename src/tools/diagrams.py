@@ -8,7 +8,7 @@ relación y flujo de procesamiento documental.
 import os
 from PIL import Image, ImageDraw, ImageFont
 
-OUT = os.path.join(os.path.dirname(__file__), '..', '..', '02_Diseno', 'imagenes')
+OUT = os.path.join(os.path.dirname(__file__), '..', '..', 'Documentacion', '02_Diseno', 'imagenes')
 ACCENT = (31, 59, 115)
 BLACK = (25, 25, 25)
 GRAY = (110, 110, 110)

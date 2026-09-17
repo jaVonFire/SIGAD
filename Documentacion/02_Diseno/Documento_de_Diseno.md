@@ -532,7 +532,41 @@ Esta implementación —sin dependencias externas de álgebra lineal— demuestr
 
 ## 8. Diagramas de la solución
 
-Los diagramas bases (componentes, secuencia de consulta y despliegue) pueden generarse con la utilidad incluida en el repositorio: `src/tools/diagrams.py` (genera diagramas Mermaid). A continuación se presenta el diagrama de secuencia principal de la consulta RAG:
+Los siguientes diagramas fueron generados con la utilidad `src/tools/diagrams.py` (Pillow) y se almacenan en `Documentacion/02_Diseno/imagenes/`.
+
+### 8.1 Arquitectura general
+
+![Arquitectura general de la solución SIGAD](imagenes/arquitectura.png)
+
+### 8.2 Casos de uso
+
+![Diagrama de casos de uso de SIGAD](imagenes/casos_uso.png)
+
+### 8.3 Componentes
+
+![Diagrama de componentes del backend](imagenes/componentes.png)
+
+### 8.4 Despliegue
+
+![Diagrama de despliegue de SIGAD](imagenes/despliegue.png)
+
+### 8.5 Secuencia — procesamiento documental (IA)
+
+![Diagrama de secuencia del procesamiento de un documento](imagenes/secuencia_proceso.png)
+
+### 8.6 Secuencia — consulta en lenguaje natural (RAG)
+
+![Diagrama de secuencia de la consulta RAG](imagenes/secuencia_rag.png)
+
+### 8.7 Modelo Entidad-Relación
+
+![Modelo entidad-relación de SIGAD](imagenes/mer.png)
+
+### 8.8 Flujo de procesamiento documental
+
+![Flujo de procesamiento documental](imagenes/flujo.png)
+
+### 8.9 Secuencia RAG — representación textual
 
 ```
 Usuario   SPA (chat.js)      API /api/ask        rag.ask           NLP
